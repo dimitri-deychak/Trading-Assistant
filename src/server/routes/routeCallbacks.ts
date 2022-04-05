@@ -2,7 +2,6 @@ import { ClosePosition, Order, PlaceOrder } from '@master-chief/alpaca';
 import { Request, Response } from 'express';
 
 import { alpacaClient } from '../alpacaClient';
-import { db } from '../database';
 import {
   IListenerExitRule,
   IPosition,
@@ -22,7 +21,7 @@ export const newPositionCallback = async (req: Request, res: Response) => {
 
     const position = await initiatePositionFromRawTradeEntry(rawTradeEntry);
 
-    db.set(position.symbol, position);
+    // db.set(position.symbol, position);
     res.send(position);
   } catch (e) {
     console.error(e);

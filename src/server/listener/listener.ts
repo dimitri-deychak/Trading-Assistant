@@ -1,8 +1,8 @@
 import { AlpacaStream } from '@master-chief/alpaca';
-import { db } from '../database';
 import { latestPriceHandler } from './listenerHandlers/latestPriceHandlers';
 import { accountTradeUpdatesHandler } from './listenerHandlers/accountTradeHandlers';
 import { API_KEY_ID, SECRET_KEY } from '../config';
+import { getAccountStateFromS3 } from '../database';
 
 export const tradeStream = new AlpacaStream({
   credentials: {
@@ -22,9 +22,10 @@ export const accountStream = new AlpacaStream({
   type: 'account',
 });
 
-export const beginStream = () => {
+export const beginStream = async () => {
+  const { positions } = await getAccountStateFromS3();
   tradeStream.once('authenticated', () => {
-    const symbolsToSubscribeTo = ['AAPL']; //Object.keys(db.JSON());
+    const symbolsToSubscribeTo = positions.map((position) => position.symbol);
     tradeStream.subscribe('trades', symbolsToSubscribeTo);
     tradeStream.on('trade', latestPriceHandler);
   });

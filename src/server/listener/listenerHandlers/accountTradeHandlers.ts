@@ -1,35 +1,36 @@
 import { TradeUpdate } from '@master-chief/alpaca/@types/entities';
-import { db } from '../../database';
 import { IListenerExitRule, IPosition } from '../../../shared/interfaces';
+import { getPositionStateFromS3, updatePositionInS3 } from '../../database';
 
-export const accountTradeUpdatesHandler = (tradeUpdate: TradeUpdate) => {
+export const accountTradeUpdatesHandler = async (tradeUpdate: TradeUpdate) => {
   const { order, event } = tradeUpdate;
   const { symbol } = order;
-  const positionState = db.get(symbol);
+  const positionState = await getPositionStateFromS3(symbol);
   if (!positionState) {
     throw new Error('Getting trade updates for untracked position - ' + symbol);
   }
 
   const orderFillEvent = ['fill', 'partial_fill'].includes(event);
   if (orderFillEvent) {
-    handleBuyOrderFilled(positionState);
+    await handleBuyOrderFilled(positionState);
   }
 };
 
-const handleBuyOrderFilled = (positionState: IPosition) => {
+const handleBuyOrderFilled = async (positionState: IPosition) => {
   // move buy order triggers to activeListeners
   const {
-    entryRule: { listenersToActivate, ...entryRule }
+    entryRule: { listenersToActivate, ...entryRule },
   } = positionState;
 
-  if (listenersToActivate.length > 0) {
-    const newEntryRule = {
-      ...entryRule,
-      listenersToActivate: [] as IListenerExitRule[]
-    };
+  const newEntryRule = {
+    ...entryRule,
+    listenersToActivate: [] as IListenerExitRule[],
+  };
 
-    const newPositionState = {
-      ...positionState
-    };
-  }
+  const newPositionState = {
+    ...positionState,
+    entryRule: newEntryRule,
+  };
+
+  await updatePositionInS3(newPositionState);
 };
