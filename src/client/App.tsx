@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { AlpacaClient, DefaultCredentials, Bar, PlaceOrder } from '@master-chief/alpaca';
 import { getTradeBars } from './utils/getBars';
-import { StockDrawer } from './Components/StockDrawer';
+import { StockDrawer } from './components/StockDrawer';
 
 import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -11,9 +11,9 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 
-import { Main, AppBar, DrawerHeader } from './Components/styledAppComponents';
-import { NewTradeModal } from './Components/NewTradeEntry';
-import { TradeDetailsCard } from './Components/TradeDetailsCard';
+import { Main, AppBar, DrawerHeader } from './components/styledAppComponents';
+import { NewTradeModal } from './components/NewTradeEntry';
+import { TradeDetailsCard } from './components/TradeDetailsCard';
 
 import { IPosition, IRawTradeEntry } from '../shared/interfaces';
 import axios from 'axios';
