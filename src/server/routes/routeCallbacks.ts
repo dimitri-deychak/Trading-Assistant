@@ -54,7 +54,7 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
 
   const rMultipleTargetPrice = entryPrice + deRiskTargetMultiple * distanceFromEntryToStop;
 
-  const oneThirdDistanceFromEntryTo1R = entryPrice + ONE_THIRD * distanceFromEntryToStop;
+  const oneThirdDistanceFromEntryTo1R = ONE_THIRD * distanceFromEntryToStop;
 
   const limitPrice = entryPrice + oneThirdDistanceFromEntryTo1R;
 
@@ -89,7 +89,6 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
 
   try {
     const buyOrder = await alpacaClient.placeOrder(alpacaBuyOrder);
-    console.log({ buyOrder });
 
     const entryRule = {
       buyOrder,
