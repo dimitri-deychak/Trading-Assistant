@@ -1,6 +1,7 @@
 import { AlpacaClient, DefaultCredentials } from '@master-chief/alpaca';
-import { API_KEY_ID, SECRET_KEY } from './config';
+import { ALPACA_API_KEYS } from './config';
 
+const { API_KEY_ID, SECRET_KEY } = ALPACA_API_KEYS;
 export const alpacaClient = new AlpacaClient({
   credentials: {
     key: API_KEY_ID,

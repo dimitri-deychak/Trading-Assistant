@@ -1,15 +1,16 @@
 import { Trade, Order } from '@master-chief/alpaca';
 import { IPosition, IListenerExitRule, ListenerExitSide } from '../../../shared/interfaces';
 import { alpacaClient } from '../../alpacaClient';
-import { getPositionStateFromS3, updatePositionInS3 } from '../../database';
+import { db } from '../../database';
 import { tradeStream } from '../listener';
 
 export const latestPriceHandler = async (trade: Trade) => {
   const { p: tradePrice, S: symbol } = trade;
-  const positionState = await getPositionStateFromS3(symbol);
+  const positionState = db.getAccountPosition(symbol);
 
   if (!positionState) {
     if (symbol) {
+      console.log(`Unsubscribing from stream for ${symbol}.`);
       tradeStream.unsubscribe('trades', [symbol]);
     }
     return;
@@ -97,5 +98,5 @@ const handleListenerOrderExecuted = async (
     inactiveListeners: newInactiveListeners,
   };
 
-  await updatePositionInS3(newPositionState);
+  await db.putAccountPosition(newPositionState);
 };

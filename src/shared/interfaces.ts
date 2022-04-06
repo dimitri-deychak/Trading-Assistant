@@ -8,10 +8,12 @@ export enum PositionStatus {
   QUEUED,
   OPEN,
   RUNNER,
+  CLOSED,
 }
 
 export interface Account {
   positions: IPosition[];
+  closedPositions: IPosition[];
 }
 
 export interface IRawTradeEntry {
@@ -57,4 +59,5 @@ export interface IPosition {
   entryRule: IEntryRule;
   activeListeners: IListenerExitRule[];
   inactiveListeners: IListenerExitRule[];
+  positionQty: number;
 }

@@ -1,5 +1,5 @@
 import { Account, IPosition } from '../shared/interfaces';
-import { API_KEY_ID, SECRET_KEY } from './config';
+import { ALPACA_API_KEYS } from './config';
 
 import { S3Client } from '@aws-sdk/client-s3';
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
@@ -7,58 +7,120 @@ import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 process.env.AWS_ACCESS_KEY_ID = process.env.BUCKETEER_AWS_ACCESS_KEY_ID;
 process.env.AWS_SECRET_ACCESS_KEY = process.env.BUCKETEER_AWS_SECRET_ACCESS_KEY;
 
-const accountKey = API_KEY_ID + '-' + SECRET_KEY;
-
 const s3Client = new S3Client({
   region: process.env.BUCKETEER_AWS_REGION,
 });
 
-export const getAccountStateFromS3 = async () => {
-  try {
-    const getResult = await s3Client.send(
-      new GetObjectCommand({ Bucket: process.env.BUCKETEER_BUCKET_NAME, Key: accountKey }),
-    );
+enum DB_ERROR {
+  ACCOUNT_DOES_NOT_EXIST = 'NoSuchKey',
+}
 
-    const stringifiedAccountStateFromS3 = await streamToString(getResult.Body);
-    const accountStateFromS3 = JSON.parse(stringifiedAccountStateFromS3 as string);
-    return accountStateFromS3 as Account;
-  } catch (e) {
-    console.error('S3 Account Read Error', e);
-  }
-};
-
-export const getPositionStateFromS3 = async (symbol: string) => {
-  const { positions } = await getAccountStateFromS3();
-  const positionState = positions.find((position) => position.symbol === symbol);
-  if (!positionState) {
-    throw new Error(`Position State not found ${symbol} in S3`);
+class Database {
+  apiKey: string;
+  secretKey: string;
+  accountIndexKey: string;
+  account: Account;
+  _isInitialized: boolean;
+  constructor(apiKey: string, secretKey: string) {
+    this.apiKey = apiKey;
+    this.secretKey = secretKey;
+    this.accountIndexKey = this.apiKey + '-' + this.secretKey;
+    this._isInitialized = false;
   }
 
-  return positionState;
-};
-
-export const updatePositionInS3 = async (newPosition: IPosition) => {
-  const { positions, ...account } = await getAccountStateFromS3();
-  const positionIndex = positions.findIndex(({ symbol }) => symbol === newPosition.symbol);
-  if (!positionIndex) {
-    throw new Error(`Failed to write position to S3 - position ${newPosition.symbol} not found in S3`);
+  isInitialized() {
+    return this._isInitialized;
   }
 
-  const newPositions = [...positions];
-  newPositions[positionIndex] = { ...newPosition };
-
-  await writeAccountToS3({ ...account, positions: newPositions });
-};
-
-export const writeAccountToS3 = async (account: Account) => {
-  try {
-    await s3Client.send(
-      new PutObjectCommand({ Bucket: process.env.BUCKETEER_BUCKET_NAME, Key: accountKey, Body: account }),
-    );
-  } catch (e) {
-    console.error('S3 Account Write Error', e);
+  async init() {
+    await this.syncAccount();
+    this._isInitialized = true;
   }
-};
+
+  async syncAccount() {
+    try {
+      const getResult = await s3Client.send(
+        new GetObjectCommand({ Bucket: process.env.BUCKETEER_BUCKET_NAME, Key: this.accountIndexKey }),
+      );
+
+      const stringifiedAccountStateFromS3 = await streamToString(getResult.Body);
+      const accountStateFromS3 = JSON.parse(stringifiedAccountStateFromS3 as string);
+      this.account = accountStateFromS3 as Account;
+
+      console.log('Synced Account', this.account);
+    } catch (e) {
+      if (e.Code === DB_ERROR.ACCOUNT_DOES_NOT_EXIST) {
+        await this.putNewAccount();
+        await this.syncAccount();
+      } else {
+        console.error('S3 Account Read Error', e);
+      }
+    }
+  }
+
+  getAccountPosition(symbol: string) {
+    const positionState = this.account.positions.find((position) => position.symbol === symbol);
+    if (!positionState) {
+      throw new Error(`Position State not found ${symbol} in S3`);
+    }
+
+    return positionState;
+  }
+
+  getAccountPositions() {
+    return this.account.positions;
+  }
+
+  getAccount() {
+    return this.account;
+  }
+
+  async putAccountPosition(newPosition: IPosition) {
+    try {
+      const { positions, ...account } = this.account;
+      const positionIndex = positions.findIndex(({ symbol }) => symbol === newPosition.symbol);
+      if (positionIndex < 0) {
+        throw new Error(`Failed to write position to S3 - position ${newPosition.symbol} not found in S3`);
+      }
+
+      const newPositions = [...positions];
+      newPositions[positionIndex] = { ...newPosition };
+
+      await this.putAccount({ ...account, positions: newPositions });
+    } catch (e) {
+      console.error('S3 Position Write Error', e);
+    }
+  }
+
+  async putAccount(account: Account) {
+    try {
+      await s3Client.send(
+        new PutObjectCommand({ Bucket: process.env.BUCKETEER_BUCKET_NAME, Key: this.accountIndexKey, Body: account }),
+      );
+      await this.syncAccount();
+    } catch (e) {
+      console.error('S3 Account Write Error', e);
+    }
+  }
+
+  async putNewAccount() {
+    try {
+      const account = { positions: [], closedPositions: [] } as Account;
+      await s3Client.send(
+        new PutObjectCommand({
+          Bucket: process.env.BUCKETEER_BUCKET_NAME,
+          Key: this.accountIndexKey,
+          Body: JSON.stringify(account),
+        }),
+      );
+
+      console.error('Created new account.', account);
+      await this.syncAccount();
+    } catch (e) {
+      console.error('S3 New Account Write Error', e);
+    }
+  }
+}
 
 const streamToString = async (stream) => {
   const chunks = [];
@@ -68,3 +130,6 @@ const streamToString = async (stream) => {
     stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
   });
 };
+
+const { API_KEY_ID, SECRET_KEY } = ALPACA_API_KEYS;
+export const db = new Database(API_KEY_ID, SECRET_KEY);

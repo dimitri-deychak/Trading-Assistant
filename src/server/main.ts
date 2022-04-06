@@ -4,7 +4,7 @@ import { apiRouter } from './routes/api-router';
 import { pagesRouter } from './routes/pages-router';
 import { staticsRouter } from './routes/statics-router';
 import * as config from './config';
-import { getAccountStateFromS3 } from './database';
+import { beginStream } from './listener/listener';
 
 console.log(`*******************************************`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
@@ -18,7 +18,8 @@ app.use('/assets', express.static(path.join(process.cwd(), 'assets')));
 app.use(apiRouter());
 app.use(staticsRouter());
 app.use(pagesRouter());
-getAccountStateFromS3();
+
+beginStream();
 
 app.listen(config.SERVER_PORT, () => {
   console.log(`App listening on port ${config.SERVER_PORT}!`);

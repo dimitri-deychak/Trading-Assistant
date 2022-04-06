@@ -1,4 +1,4 @@
-import { ClosePosition, Order, PlaceOrder } from '@master-chief/alpaca';
+import { ClosePosition, PlaceOrder } from '@master-chief/alpaca';
 import { Request, Response } from 'express';
 
 import { alpacaClient } from '../alpacaClient';
@@ -9,20 +9,35 @@ import {
   ListenerExitSide,
   PositionStatus,
 } from '../../shared/interfaces';
-import { API_KEY_ID, SECRET_KEY, PAPER_API_KEY_ID, PAPER_SECRET_KEY } from '../config';
+import { ALPACA_API_KEYS } from '../config';
+import { db } from '../database';
 
 export const getEnvironmentHandler = async (_: Request, res: Response) => {
-  res.send({ API_KEY_ID, SECRET_KEY, PAPER_API_KEY_ID, PAPER_SECRET_KEY });
+  res.send(ALPACA_API_KEYS);
 };
 
-export const newPositionCallback = async (req: Request, res: Response) => {
+export const newPositionHandler = async (req: Request, res: Response) => {
   try {
     const rawTradeEntry: IRawTradeEntry = req.body;
 
     const position = await initiatePositionFromRawTradeEntry(rawTradeEntry);
+    await db.putAccountPosition(position);
 
-    // db.set(position.symbol, position);
     res.send(position);
+  } catch (e) {
+    console.error(e);
+    res.sendStatus(400);
+  }
+};
+
+export const getAccountHandler = async (_: Request, res: Response) => {
+  try {
+    if (!db.isInitialized()) {
+      await db.init();
+    }
+
+    const account = db.getAccount();
+    res.send(account);
   } catch (e) {
     console.error(e);
     res.sendStatus(400);
@@ -33,13 +48,13 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
   const { entryPrice, stopPrice, newSymbol, riskInDollars, deRiskTargetMultiple } = rawTradeEntry;
 
   //ToDo: add this as option to FE
-  const HARDCODED_PERCENT_TO_DE_RISK = 33.33;
+  const ONE_THIRD = 1 / 3;
 
   const distanceFromEntryToStop = Math.abs(entryPrice - stopPrice);
 
   const rMultipleTargetPrice = entryPrice + deRiskTargetMultiple * distanceFromEntryToStop;
 
-  const oneThirdDistanceFromEntryTo1R = (1 / 3) * (entryPrice + distanceFromEntryToStop);
+  const oneThirdDistanceFromEntryTo1R = ONE_THIRD * (entryPrice + distanceFromEntryToStop);
 
   const limitPrice = entryPrice + oneThirdDistanceFromEntryTo1R;
 
@@ -62,7 +77,7 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
     triggerPrice: rMultipleTargetPrice,
     closeOrder: {
       symbol: newSymbol,
-      percentage: HARDCODED_PERCENT_TO_DE_RISK,
+      percentage: ONE_THIRD,
     } as ClosePosition,
   };
 
@@ -85,5 +100,6 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
     entryRule,
     activeListeners: [] as IListenerExitRule[],
     inactiveListeners: [] as IListenerExitRule[],
+    positionQty: 0,
   };
 };
