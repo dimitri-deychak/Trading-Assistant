@@ -47,8 +47,6 @@ export const getAccountHandler = async (_: Request, res: Response) => {
 const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry): Promise<IPosition> => {
   const { entryPrice, stopPrice, newSymbol, riskInDollars, deRiskTargetMultiple } = rawTradeEntry;
 
-  console.log('initiation!', rawTradeEntry);
-
   //ToDo: add this as option to FE
   const ONE_THIRD = 1 / 3;
 
@@ -91,6 +89,7 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
 
   try {
     const buyOrder = await alpacaClient.placeOrder(alpacaBuyOrder);
+    console.log({ buyOrder });
 
     const entryRule = {
       buyOrder,
@@ -106,6 +105,6 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
       positionQty: 0,
     };
   } catch (e) {
-    console.error(e);
+    console.error('Error submitting trade', e);
   }
 };

@@ -28,8 +28,8 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
   transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
   marginLeft: 'auto',
   transition: theme.transitions.create('transform', {
-    duration: theme.transitions.duration.shortest
-  })
+    duration: theme.transitions.duration.shortest,
+  }),
 }));
 
 type TradeDetailsCardProps = {
@@ -47,47 +47,39 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position }) => {
 
   //ToDo: make this support multiple stops / take profits
   // Maybe make trade form take Position
-  const stopOrder = position.activeListeners.find(
-    (listener) => listener.side === ListenerExitSide.STOP
-  );
-  const takeProfitOrder = position.activeListeners.find(
-    (listener) => listener.side === ListenerExitSide.TAKE_PROFIT
-  );
+  const stopOrder = position.activeListeners.find((listener) => listener.side === ListenerExitSide.STOP);
+  const takeProfitOrder = position.activeListeners.find((listener) => listener.side === ListenerExitSide.TAKE_PROFIT);
 
   const stopPrice = stopOrder?.triggerPrice || 0;
   const takeProfitPrice = takeProfitOrder?.triggerPrice || 0;
   const entryPrice = position.entryRule.buyOrder.stop_price || 0;
-  const deRiskTargetMultiple =
-    (takeProfitPrice - entryPrice) / (entryPrice - stopPrice) || 0;
-  const riskInDollars =
-    position.entryRule.buyOrder.qty * (entryPrice - stopPrice);
+  const deRiskTargetMultiple = (takeProfitPrice - entryPrice) / (entryPrice - stopPrice) || 0;
+  const riskInDollars = position.entryRule.buyOrder.qty * (entryPrice - stopPrice);
 
   return (
-    <Card
-      sx={{ flex: 1, height: '80vh', display: 'flex', flexDirection: 'column' }}
-    >
+    <Card sx={{ flex: 1, height: '80vh', display: 'flex', flexDirection: 'column' }}>
       <CardHeader
         avatar={
-          <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
+          <Avatar sx={{ bgcolor: red[500] }} aria-label='recipe'>
             S
           </Avatar>
         }
         action={
-          <IconButton aria-label="settings">
+          <IconButton aria-label='settings'>
             <MoreVertIcon />
           </IconButton>
         }
         title={position.symbol}
-        subheader="Date entered"
+        subheader='Date entered'
       />
 
       <Box sx={{ flex: 1, display: 'flex' }}>
         <CardMedia sx={{ margin: '24px', width: '90%', flex: 1 }}>
           <TradingViewWidget
-            symbol={position}
+            symbol={symbol}
             autosize
             show_bottom_toolbar={true}
-            locale="en"
+            locale='en'
             hide_side_toolbar={false}
           />
         </CardMedia>
@@ -101,16 +93,11 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position }) => {
       </Box>
 
       <CardActions disableSpacing>
-        <ExpandMore
-          expand={expanded}
-          onClick={handleExpandClick}
-          aria-expanded={expanded}
-          aria-label="show more"
-        >
+        <ExpandMore expand={expanded} onClick={handleExpandClick} aria-expanded={expanded} aria-label='show more'>
           <ExpandMoreIcon />
         </ExpandMore>
       </CardActions>
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
+      <Collapse in={expanded} timeout='auto' unmountOnExit>
         <CardContent>Trade Details Here</CardContent>
       </Collapse>
     </Card>

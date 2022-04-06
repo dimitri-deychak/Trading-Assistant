@@ -38,7 +38,6 @@ export const App = () => {
   useEffect(() => {
     const getAccountData = async () => {
       const [env, account] = await Promise.all([getEnv(), getAccount()]);
-      console.log({ account, env });
       setEnv(env);
       setAccount(account);
     };

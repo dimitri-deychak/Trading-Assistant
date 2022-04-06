@@ -81,7 +81,7 @@ class Database {
 
   async putAccountPosition(newPosition: IPosition) {
     if (!newPosition) {
-      throw new Error('Trying to put an undefined position');
+      throw new Error('Trying to put an undefined position.');
     }
     try {
       const { positions, ...account } = this.account;

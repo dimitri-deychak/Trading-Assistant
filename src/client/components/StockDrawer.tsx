@@ -94,7 +94,7 @@ export const StockDrawer: VFC<OwnProps> = ({
       <List>
         <ListItem>
           <Typography variant='h5' color='initial'>
-            Open Trades
+            Queued Trades
           </Typography>
         </ListItem>
         {queuedTrades.map((position, index) => (

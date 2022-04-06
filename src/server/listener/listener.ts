@@ -8,7 +8,7 @@ export const tradeStream = new AlpacaStream({
   credentials: {
     key: ALPACA_API_KEYS.API_KEY_ID,
     secret: ALPACA_API_KEYS.SECRET_KEY,
-    paper: IS_DEV,
+    paper: true,
   },
   type: 'market_data',
 });
@@ -17,7 +17,7 @@ export const accountStream = new AlpacaStream({
   credentials: {
     key: ALPACA_API_KEYS.API_KEY_ID,
     secret: ALPACA_API_KEYS.SECRET_KEY,
-    paper: IS_DEV,
+    paper: true,
   },
   type: 'account',
 });
