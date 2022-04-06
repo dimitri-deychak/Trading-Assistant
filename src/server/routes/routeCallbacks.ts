@@ -54,7 +54,7 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
 
   const rMultipleTargetPrice = entryPrice + deRiskTargetMultiple * distanceFromEntryToStop;
 
-  const oneThirdDistanceFromEntryTo1R = ONE_THIRD * (entryPrice + distanceFromEntryToStop);
+  const oneThirdDistanceFromEntryTo1R = entryPrice + ONE_THIRD * distanceFromEntryToStop;
 
   const limitPrice = entryPrice + oneThirdDistanceFromEntryTo1R;
 
