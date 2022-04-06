@@ -15,60 +15,36 @@ import { Main, AppBar, DrawerHeader } from './components/styledAppComponents';
 import { NewTradeModal } from './components/NewTradeEntry';
 import { TradeDetailsCard } from './components/TradeDetailsCard';
 
-import { IPosition, IRawTradeEntry } from '../shared/interfaces';
-import axios from 'axios';
+import { Account, IPosition, IRawTradeEntry, PositionStatus } from '../shared/interfaces';
+import API from 'axios';
 
 import { IEnv } from '../shared/IEnv';
-
-// const PUBLIC_URL: string = process.env.PUBLIC_URL || '';
-// const PORT: string = process.env.PORT || '3000';
-// const API_KEY_ID: string = process.env.API_KEY_ID;
-// const SECRET_KEY: string = process.env.SECRET_KEY;
-
-// const API_RESOURCE = `${PUBLIC_URL}:${PORT}`;
+import { getAccount, getAlpacaClient, getEnv } from './utils/api';
 
 export const App = () => {
-  const [position, setPosition] = useState<IPosition>();
-  const [dbSnapshot, setDbSnapshot] = useState<Record<string, IPosition>>();
+  const [selectedPosition, setSelectedPosition] = useState<IPosition>();
+  const [account, setAccount] = useState<Account>();
+  const [env, setEnv] = useState<IEnv>();
 
   const [newTradeModalOpen, setNewTradeModalOpen] = useState(false);
-  const [runners, setRunners] = useState<IPosition[]>([]);
-  const [openTrades, setOpenTrades] = useState<IPosition[]>([]);
 
   const alpacaClient = useMemo(async () => {
-    const { API_KEY_ID, SECRET_KEY } = (await axios.get('/api/env')) as IEnv;
-    return new AlpacaClient({
-      credentials: {
-        key: API_KEY_ID,
-        secret: SECRET_KEY,
-      } as DefaultCredentials,
-      rate_limit: false,
-    });
+    if (!env) {
+      return null;
+    }
+    return getAlpacaClient(env);
+  }, [env]);
+
+  useEffect(() => {
+    const getAccountData = async () => {
+      const [env, account] = await Promise.all([getEnv(), getAccount()]);
+      console.log({ account, env });
+      setEnv(env);
+      setAccount(account);
+    };
+
+    getAccountData();
   }, []);
-
-  // useEffect(() => {
-  //   const getData = async () => {
-  //     if (!symbol) return;
-
-  //     const startDate = new Date('2000-01-01');
-  //     const endDate = new Date('2021-09-03T20:00:00.000Z');
-
-  //     const assets = await alpacaClient.getAssets();
-
-  //     const tradeBars = await getTradeBars(
-  //       alpacaClient,
-  //       symbol,
-  //       startDate,
-  //       endDate
-  //     );
-
-  //     console.log({ assets, tradeBars });
-
-  //     setSymbolData(tradeBars);
-  //   };
-
-  //   getData();
-  // }, [symbol]);
 
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
@@ -82,7 +58,7 @@ export const App = () => {
   };
 
   const onSymbolClicked = (position: IPosition) => {
-    setPosition(position);
+    setSelectedPosition(position);
   };
 
   const onAddTradeClicked = () => {
@@ -93,9 +69,26 @@ export const App = () => {
     setNewTradeModalOpen(false);
   };
 
+  const runners = useMemo(
+    () =>
+      account ? account.positions.filter((position) => position && position.status === PositionStatus.RUNNER) : [],
+    [account],
+  );
+
+  const openTrades = useMemo(
+    () => (account ? account.positions.filter((position) => position && position.status === PositionStatus.OPEN) : []),
+    [account],
+  );
+
+  const queuedTrades = useMemo(
+    () =>
+      account ? account.positions.filter((position) => position && position.status === PositionStatus.QUEUED) : [],
+    [account],
+  );
+
   const onConfirmAlpacaOrder = async (rawTradeEntry: IRawTradeEntry) => {
     try {
-      await API.post(API_RESOURCE + '/new-position', { rawTradeEntry });
+      await API.post('/api/new-position', { rawTradeEntry });
       setNewTradeModalOpen(false);
     } catch (e) {
       console.error(e);
@@ -139,6 +132,7 @@ export const App = () => {
         open={open}
         runners={runners}
         openTrades={openTrades}
+        queuedTrades={queuedTrades}
         handleDrawerClose={handleDrawerClose}
         onSymbolClicked={onSymbolClicked}
         onAddTradeClicked={onAddTradeClicked}
@@ -146,7 +140,7 @@ export const App = () => {
 
       <Main open={open}>
         <DrawerHeader />
-        {position && <TradeDetailsCard position={position} />}
+        {selectedPosition && <TradeDetailsCard position={selectedPosition} />}
       </Main>
     </Box>
   );

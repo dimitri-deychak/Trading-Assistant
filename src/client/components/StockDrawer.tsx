@@ -25,6 +25,7 @@ type OwnProps = {
   open: boolean;
   runners: IPosition[];
   openTrades: IPosition[];
+  queuedTrades: IPosition[];
   handleDrawerClose: () => void;
   onSymbolClicked: (position: IPosition) => void;
   onAddTradeClicked: () => void;
@@ -34,9 +35,10 @@ export const StockDrawer: VFC<OwnProps> = ({
   open,
   runners,
   openTrades,
+  queuedTrades,
   handleDrawerClose,
   onSymbolClicked,
-  onAddTradeClicked
+  onAddTradeClicked,
 }) => {
   const theme = useTheme();
 
@@ -47,35 +49,27 @@ export const StockDrawer: VFC<OwnProps> = ({
         flexShrink: 0,
         '& .MuiDrawer-paper': {
           width: drawerWidth,
-          boxSizing: 'border-box'
-        }
+          boxSizing: 'border-box',
+        },
       }}
-      variant="persistent"
-      anchor="left"
+      variant='persistent'
+      anchor='left'
       open={open}
     >
       <DrawerHeader>
         <IconButton onClick={handleDrawerClose}>
-          {theme.direction === 'ltr' ? (
-            <ChevronLeftIcon />
-          ) : (
-            <ChevronRightIcon />
-          )}
+          {theme.direction === 'ltr' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
         </IconButton>
       </DrawerHeader>
       <Divider />
       <List>
         <ListItem>
-          <Typography variant="h5" color="initial">
+          <Typography variant='h5' color='initial'>
             Runners
           </Typography>
         </ListItem>
         {runners.map((position, index) => (
-          <ListItem
-            button
-            key={position.symbol}
-            onClick={() => onSymbolClicked(position)}
-          >
+          <ListItem button key={position.symbol} onClick={() => onSymbolClicked(position)}>
             <ListItemIcon></ListItemIcon>
             <ListItemText primary={position.symbol} />
           </ListItem>
@@ -84,16 +78,27 @@ export const StockDrawer: VFC<OwnProps> = ({
       <Divider />
       <List>
         <ListItem>
-          <Typography variant="h5" color="initial">
+          <Typography variant='h5' color='initial'>
             Open Trades
           </Typography>
         </ListItem>
         {openTrades.map((position, index) => (
-          <ListItem
-            button
-            key={position.symbol}
-            onClick={() => onSymbolClicked(position)}
-          >
+          <ListItem button key={position.symbol} onClick={() => onSymbolClicked(position)}>
+            <ListItemIcon></ListItemIcon>
+            <ListItemText primary={position.symbol} />
+          </ListItem>
+        ))}
+      </List>
+      <Divider />
+      <Divider />
+      <List>
+        <ListItem>
+          <Typography variant='h5' color='initial'>
+            Open Trades
+          </Typography>
+        </ListItem>
+        {queuedTrades.map((position, index) => (
+          <ListItem button key={position.symbol} onClick={() => onSymbolClicked(position)}>
             <ListItemIcon></ListItemIcon>
             <ListItemText primary={position.symbol} />
           </ListItem>
@@ -104,7 +109,7 @@ export const StockDrawer: VFC<OwnProps> = ({
         <ListItem button onClick={onAddTradeClicked}>
           <ListItemIcon></ListItemIcon>
 
-          <ListItemText primary="Add trade" />
+          <ListItemText primary='Add trade' />
         </ListItem>
       </List>
     </Drawer>

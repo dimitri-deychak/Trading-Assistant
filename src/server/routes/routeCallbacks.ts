@@ -9,16 +9,16 @@ import {
   ListenerExitSide,
   PositionStatus,
 } from '../../shared/interfaces';
-import { ALPACA_API_KEYS } from '../config';
+import { ALPACA_API_KEYS, IS_DEV } from '../config';
 import { db } from '../database';
 
 export const getEnvironmentHandler = async (_: Request, res: Response) => {
-  res.send(ALPACA_API_KEYS);
+  res.send({ ...ALPACA_API_KEYS, IS_DEV });
 };
 
 export const newPositionHandler = async (req: Request, res: Response) => {
   try {
-    const rawTradeEntry: IRawTradeEntry = req.body;
+    const { rawTradeEntry } = req.body as { rawTradeEntry: IRawTradeEntry };
 
     const position = await initiatePositionFromRawTradeEntry(rawTradeEntry);
     await db.putAccountPosition(position);
@@ -46,6 +46,8 @@ export const getAccountHandler = async (_: Request, res: Response) => {
 
 const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry): Promise<IPosition> => {
   const { entryPrice, stopPrice, newSymbol, riskInDollars, deRiskTargetMultiple } = rawTradeEntry;
+
+  console.log('initiation!', rawTradeEntry);
 
   //ToDo: add this as option to FE
   const ONE_THIRD = 1 / 3;
@@ -87,19 +89,23 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
     closeOrder: { symbol: newSymbol, percentage: 100 } as ClosePosition,
   };
 
-  const buyOrder = await alpacaClient.placeOrder(alpacaBuyOrder);
+  try {
+    const buyOrder = await alpacaClient.placeOrder(alpacaBuyOrder);
 
-  const entryRule = {
-    buyOrder,
-    listenersToActivate: [deRiskTargetListener, stopLossListener],
-  };
+    const entryRule = {
+      buyOrder,
+      listenersToActivate: [deRiskTargetListener, stopLossListener],
+    };
 
-  return {
-    status: PositionStatus.QUEUED,
-    symbol: newSymbol,
-    entryRule,
-    activeListeners: [] as IListenerExitRule[],
-    inactiveListeners: [] as IListenerExitRule[],
-    positionQty: 0,
-  };
+    return {
+      status: PositionStatus.QUEUED,
+      symbol: newSymbol,
+      entryRule,
+      activeListeners: [] as IListenerExitRule[],
+      inactiveListeners: [] as IListenerExitRule[],
+      positionQty: 0,
+    };
+  } catch (e) {
+    console.error(e);
+  }
 };

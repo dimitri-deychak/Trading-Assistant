@@ -2,7 +2,6 @@ import { ClosePosition } from '@master-chief/alpaca';
 import { TradeUpdate } from '@master-chief/alpaca/@types/entities';
 import {
   IListenerExitRule,
-  IListenerSimpleExitRule,
   IListenerSimpleStopLossRule,
   IPosition,
   ListenerExitSide,
@@ -119,7 +118,7 @@ const handleBreakEvenOnRest = async (positionState: IPosition) => {
     costBasisSoFar: 0,
   };
 
-  positionState.inactiveListeners.forEach((inactiveListener) => {
+  inactiveListeners.forEach((inactiveListener) => {
     const { order } = inactiveListener;
     const { filled_avg_price: filledAvgPrice, filled_qty: filledQty } = order;
 

@@ -47,6 +47,10 @@ class Database {
       const accountStateFromS3 = JSON.parse(stringifiedAccountStateFromS3 as string);
       this.account = accountStateFromS3 as Account;
 
+      if (!this.account.positions) {
+        await this.putNewAccount();
+      }
+
       console.log('Synced Account', this.account);
     } catch (e) {
       if (e.Code === DB_ERROR.ACCOUNT_DOES_NOT_EXIST) {
@@ -76,26 +80,36 @@ class Database {
   }
 
   async putAccountPosition(newPosition: IPosition) {
+    if (!newPosition) {
+      throw new Error('Trying to put an undefined position');
+    }
     try {
       const { positions, ...account } = this.account;
       const positionIndex = positions.findIndex(({ symbol }) => symbol === newPosition.symbol);
       if (positionIndex < 0) {
-        throw new Error(`Failed to write position to S3 - position ${newPosition.symbol} not found in S3`);
+        const newPositions = [...positions, newPosition];
+        await this.putAccount({ ...account, positions: newPositions });
+      } else {
+        const newPositions = [...positions];
+        newPositions[positionIndex] = { ...newPosition };
+
+        await this.putAccount({ ...account, positions: newPositions });
       }
-
-      const newPositions = [...positions];
-      newPositions[positionIndex] = { ...newPosition };
-
-      await this.putAccount({ ...account, positions: newPositions });
     } catch (e) {
       console.error('S3 Position Write Error', e);
     }
   }
 
   async putAccount(account: Account) {
+    account.positions = account.positions.filter(Boolean);
+    account.closedPositions = account.closedPositions.filter(Boolean);
     try {
       await s3Client.send(
-        new PutObjectCommand({ Bucket: process.env.BUCKETEER_BUCKET_NAME, Key: this.accountIndexKey, Body: account }),
+        new PutObjectCommand({
+          Bucket: process.env.BUCKETEER_BUCKET_NAME,
+          Key: this.accountIndexKey,
+          Body: JSON.stringify(account),
+        }),
       );
       await this.syncAccount();
     } catch (e) {
