@@ -34,6 +34,7 @@ class Database {
 
   async init() {
     await this.syncAccount();
+
     this._isInitialized = true;
   }
 
