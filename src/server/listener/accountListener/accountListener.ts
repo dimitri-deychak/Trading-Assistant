@@ -22,5 +22,13 @@ accountStream.once('authenticated', async () => {
 });
 
 accountStream.on('trade_updates', async (tradeUpdate: TradeUpdate) => {
+  console.log({ tradeUpdate });
   await accountTradeUpdatesHandler(tradeUpdate);
+});
+
+accountStream.on('subscription', (message) => {
+  const { T } = message;
+  if (T === 'subscription') {
+    console.log(message);
+  }
 });
