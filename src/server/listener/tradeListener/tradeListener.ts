@@ -23,8 +23,6 @@ tradeStream.once('authenticated', async () => {
 });
 
 tradeStream.on('trade', async (trade: Trade) => {
-  console.log({ tradeEvent: trade });
-
   await latestPriceHandler(trade);
 });
 
