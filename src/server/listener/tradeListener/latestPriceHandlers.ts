@@ -2,7 +2,7 @@ import { Trade, Order } from '@master-chief/alpaca';
 import { IPosition, IListenerExitRule, ListenerExitSide } from '../../../shared/interfaces';
 import { alpacaClient } from '../../alpacaClient';
 import { db } from '../../database';
-import { tradeStream } from '../tradeListener';
+import { tradeStream } from './tradeListener';
 
 export const latestPriceHandler = async (trade: Trade) => {
   const { p: tradePrice, S: symbol } = trade;

@@ -4,7 +4,8 @@ import { apiRouter } from './routes/api-router';
 import { pagesRouter } from './routes/pages-router';
 import { staticsRouter } from './routes/statics-router';
 import * as config from './config';
-require('./listener/listener');
+import * as tradeListener from './listener/tradeListener/tradeListener';
+import * as accountListener from './listener/accountListener/accountListener';
 
 console.log(`*******************************************`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);

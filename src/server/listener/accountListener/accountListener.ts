@@ -1,7 +1,7 @@
 import { AlpacaStream } from '@master-chief/alpaca';
-import { ALPACA_API_KEYS } from '../config';
-import { db } from '../database';
-import { accountTradeUpdatesHandler } from './listenerHandlers/accountTradeHandlers';
+import { ALPACA_API_KEYS } from '../../config';
+import { db } from '../../database';
+import { accountTradeUpdatesHandler } from './accountTradeHandlers';
 
 export const accountStream = new AlpacaStream({
   credentials: {

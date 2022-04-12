@@ -1,6 +1,6 @@
 import { Activity, AlpacaStream, TradeActivity } from '@master-chief/alpaca';
-import { latestPriceHandler } from './listenerHandlers/latestPriceHandlers';
-import { accountTradeUpdatesHandler } from './listenerHandlers/accountTradeHandlers';
+import { latestPriceHandler } from './tradeListener/latestPriceHandlers';
+import { accountTradeUpdatesHandler } from './accountListener/accountTradeHandlers';
 import { ALPACA_API_KEYS, IS_DEV } from '../config';
 import { db } from '../database';
 import { alpacaClient } from '../alpacaClient';

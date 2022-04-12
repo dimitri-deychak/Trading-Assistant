@@ -1,8 +1,7 @@
 import { AlpacaStream, Trade } from '@master-chief/alpaca';
-import { ALPACA_API_KEYS } from '../config';
-import { db } from '../database';
-import { latestPriceHandler } from './listenerHandlers/latestPriceHandlers';
-import { sleep } from '../../shared/sleep';
+import { ALPACA_API_KEYS } from '../../config';
+import { db } from '../../database';
+import { latestPriceHandler } from './latestPriceHandlers';
 
 export const tradeStream = new AlpacaStream({
   credentials: {
@@ -19,8 +18,7 @@ tradeStream.once('authenticated', async () => {
     await db.init();
   }
 
-  const testSymbols = ['PAG', 'JLL', 'HCI'];
-  const symbolsToSubscribeTo = testSymbols; //db.getAccountPositions().map((position) => position.symbol);
+  const symbolsToSubscribeTo = db.getAccountPositions().map((position) => position.symbol);
   tradeStream.subscribe('trades', symbolsToSubscribeTo);
 });
 
