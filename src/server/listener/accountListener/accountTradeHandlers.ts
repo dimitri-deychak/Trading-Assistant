@@ -49,6 +49,7 @@ const handleBuyOrderFilled = async (positionState: IPosition, tradeUpdate: Trade
 
   const newPositionState: IPosition = {
     ...positionState,
+    activeListeners: listenersToActivate,
     status: PositionStatus.OPEN,
     entryRule: newEntryRule,
     positionQty,

@@ -18,6 +18,10 @@ export const latestPriceHandler = async (trade: Trade) => {
       return;
     }
 
+    if (!tradePrice) {
+      return;
+    }
+
     // process all activeListeners
     const { activeListeners } = positionState;
     if (activeListeners.length > 0) {
