@@ -95,6 +95,7 @@ class Database {
 
         await this.putAccount({ ...account, positions: newPositions });
       }
+      return this.getAccount();
     } catch (e) {
       console.error('S3 Position Write Error', e);
     }
@@ -147,3 +148,4 @@ const streamToString = async (stream) => {
 
 const { API_KEY_ID, SECRET_KEY } = ALPACA_API_KEYS;
 export const db = new Database(API_KEY_ID, SECRET_KEY);
+// db.putNewAccount();

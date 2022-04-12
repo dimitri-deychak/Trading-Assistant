@@ -22,6 +22,6 @@ const { version: VERSION } = PackageJson;
 
 // server
 const SERVER_PORT = process.env.PORT || 3000;
-const WEBPACK_PORT = 8000; // For dev environment only
+const WEBPACK_PORT = 8001; // For dev environment only
 
 export { IS_DEV, VERSION, SERVER_PORT, WEBPACK_PORT, ALPACA_API_KEYS };

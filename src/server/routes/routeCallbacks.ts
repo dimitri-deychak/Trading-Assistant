@@ -7,6 +7,9 @@ import {
   IPosition,
   IRawTradeEntry,
   ListenerExitSide,
+  ListenerQuantityType,
+  ListenerTimeRule,
+  ListenerTriggerType,
   PositionStatus,
 } from '../../shared/interfaces';
 import { ALPACA_API_KEYS, IS_DEV } from '../config';
@@ -16,14 +19,36 @@ export const getEnvironmentHandler = async (_: Request, res: Response) => {
   res.send({ ...ALPACA_API_KEYS, IS_DEV });
 };
 
+export const getLastTradeHandler = async (req: Request, res: Response) => {
+  try {
+    const symbol = req.query.symbol as string;
+    if (symbol) {
+      const lastTrade = await alpacaClient.getLastTrade_v1({ symbol });
+      res.send({ lastTrade });
+    }
+  } catch (e) {
+    console.error(e);
+    res.sendStatus(400);
+  }
+};
+
 export const newPositionHandler = async (req: Request, res: Response) => {
   try {
     const { rawTradeEntry } = req.body as { rawTradeEntry: IRawTradeEntry };
-
     const position = await initiatePositionFromRawTradeEntry(rawTradeEntry);
-    await db.putAccountPosition(position);
+    const newAccount = await db.putAccountPosition(position);
+    res.send(newAccount);
+  } catch (e) {
+    console.error(e);
+    res.sendStatus(400);
+  }
+};
 
-    res.send(position);
+export const updatePositionHandler = async (req: Request, res: Response) => {
+  try {
+    const { position } = req.body as { position: IPosition };
+    const newAccount = await db.putAccountPosition(position);
+    res.send(newAccount);
   } catch (e) {
     console.error(e);
     res.sendStatus(400);
@@ -73,8 +98,10 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
   };
 
   const deRiskTargetListener = {
+    triggerType: ListenerTriggerType.PRICE,
+    timeRule: ListenerTimeRule.AS_SOON_AS_TRIGGER_OCCURS,
     side: ListenerExitSide.TAKE_PROFIT,
-    triggerPrice: rMultipleTargetPrice,
+    triggerValue: rMultipleTargetPrice,
     closeOrder: {
       symbol: newSymbol,
       percentage: ONE_THIRD,
@@ -82,8 +109,10 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
   };
 
   const stopLossListener = {
+    triggerType: ListenerTriggerType.PRICE,
+    timeRule: ListenerTimeRule.AS_SOON_AS_TRIGGER_OCCURS,
     side: ListenerExitSide.STOP,
-    triggerPrice: stopPrice,
+    triggerValue: stopPrice,
     closeOrder: { symbol: newSymbol, percentage: 100 } as ClosePosition,
   };
 
@@ -105,5 +134,17 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
     };
   } catch (e) {
     console.error('Error submitting trade', e);
+  }
+};
+
+export const clearStateHandler = async (_: Request, res: Response) => {
+  try {
+    await alpacaClient.closePositions({ cancel_orders: true });
+    await db.putNewAccount();
+    const newAccount = db.getAccount();
+    res.send({ newAccount });
+  } catch (e) {
+    console.error(e);
+    res.sendStatus(400);
   }
 };

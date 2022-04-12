@@ -14,8 +14,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import TradingViewWidget from 'react-tradingview-widget';
 import { Box } from '@mui/material';
-import { IPosition, ListenerExitSide } from '../../shared/interfaces';
-import { TradeForm } from './TradeForm';
+import { Account, IPosition, ListenerExitSide, PositionStatus } from '../../shared/interfaces';
+import { ListenersForm } from './TradeForm';
 
 interface ExpandMoreProps extends IconButtonProps {
   expand: boolean;
@@ -34,30 +34,18 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
 
 type TradeDetailsCardProps = {
   position: IPosition;
+  onAccountUpdated: (newAccount: Account, msg?: string) => void;
 };
 
-export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position }) => {
+export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccountUpdated }) => {
   const [expanded, setExpanded] = useState(true);
 
   const handleExpandClick = () => {
     setExpanded(!expanded);
   };
 
-  const symbol = position.symbol;
-
-  //ToDo: make this support multiple stops / take profits
-  // Maybe make trade form take Position
-  const stopOrder = position.activeListeners.find((listener) => listener.side === ListenerExitSide.STOP);
-  const takeProfitOrder = position.activeListeners.find((listener) => listener.side === ListenerExitSide.TAKE_PROFIT);
-
-  const stopPrice = stopOrder?.triggerPrice || 0;
-  const takeProfitPrice = takeProfitOrder?.triggerPrice || 0;
-  const entryPrice = position.entryRule.buyOrder.stop_price || 0;
-  const deRiskTargetMultiple = (takeProfitPrice - entryPrice) / (entryPrice - stopPrice) || 0;
-  const riskInDollars = position.entryRule.buyOrder.qty * (entryPrice - stopPrice);
-
   return (
-    <Card sx={{ flex: 1, height: '80vh', display: 'flex', flexDirection: 'column' }}>
+    <Card sx={{ flex: 1, height: 'calc(100vh - 64px - 24px - 24px)', display: 'flex', flexDirection: 'column' }}>
       <CardHeader
         avatar={
           <Avatar sx={{ bgcolor: red[500] }} aria-label='recipe'>
@@ -73,23 +61,17 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position }) => {
         subheader='Date entered'
       />
 
-      <Box sx={{ flex: 1, display: 'flex' }}>
-        <CardMedia sx={{ margin: '24px', width: '90%', flex: 1 }}>
+      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <CardMedia sx={{ margin: '24px', width: '90%', flex: 1, overflow: 'hidden' }}>
           <TradingViewWidget
-            symbol={symbol}
+            symbol={position.symbol}
             autosize
             show_bottom_toolbar={true}
             locale='en'
             hide_side_toolbar={false}
           />
         </CardMedia>
-        <TradeForm
-          symbol={symbol}
-          entryPrice={entryPrice}
-          stopPrice={stopPrice}
-          deRiskTargetMultiple={deRiskTargetMultiple}
-          riskInDollars={riskInDollars}
-        />
+        <ListenersForm position={position} onAccountUpdated={onAccountUpdated} />
       </Box>
 
       <CardActions disableSpacing>

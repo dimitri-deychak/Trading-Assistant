@@ -1,25 +1,25 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { AlpacaClient, DefaultCredentials, Bar, PlaceOrder } from '@master-chief/alpaca';
-import { getTradeBars } from './utils/getBars';
 import { StockDrawer } from './components/StockDrawer';
 
-import { useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
+import HomeIcon from '@mui/icons-material/Home';
+import CloseIcon from '@mui/icons-material/Close';
 
 import { Main, AppBar, DrawerHeader } from './components/styledAppComponents';
 import { NewTradeModal } from './components/NewTradeEntry';
 import { TradeDetailsCard } from './components/TradeDetailsCard';
 
 import { Account, IPosition, IRawTradeEntry, PositionStatus } from '../shared/interfaces';
-import API from 'axios';
 
 import { IEnv } from '../shared/IEnv';
-import { getAccount, getAlpacaClient, getEnv } from './utils/api';
+import { clearState, getAccount, getEnv, submitNewPosition } from './utils/api';
+import Dialog from '@mui/material/Dialog';
+import { Button, DialogContent, DialogTitle, Snackbar } from '@mui/material';
 
 export const App = () => {
   const [selectedPosition, setSelectedPosition] = useState<IPosition>();
@@ -28,32 +28,25 @@ export const App = () => {
 
   const [newTradeModalOpen, setNewTradeModalOpen] = useState(false);
 
-  const alpacaClient = useMemo(async () => {
-    if (!env) {
-      return null;
-    }
-    return getAlpacaClient(env);
-  }, [env]);
-
   useEffect(() => {
     const getAccountData = async () => {
       const [env, account] = await Promise.all([getEnv(), getAccount()]);
       setEnv(env);
       setAccount(account);
+      setSelectedPosition(account.positions[0] ?? undefined);
     };
 
     getAccountData();
   }, []);
 
-  const theme = useTheme();
-  const [open, setOpen] = React.useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(true);
 
   const handleDrawerOpen = () => {
-    setOpen(true);
+    setDrawerOpen(true);
   };
 
   const handleDrawerClose = () => {
-    setOpen(false);
+    setDrawerOpen(false);
   };
 
   const onSymbolClicked = (position: IPosition) => {
@@ -70,34 +63,72 @@ export const App = () => {
 
   const runners = useMemo(
     () =>
-      account ? account.positions.filter((position) => position && position.status === PositionStatus.RUNNER) : [],
+      account && account.positions
+        ? account.positions.filter((position) => position && position.status === PositionStatus.RUNNER)
+        : [],
     [account],
   );
 
   const openTrades = useMemo(
-    () => (account ? account.positions.filter((position) => position && position.status === PositionStatus.OPEN) : []),
+    () =>
+      account && account.positions
+        ? account.positions.filter((position) => position && position.status === PositionStatus.OPEN)
+        : [],
     [account],
   );
 
   const queuedTrades = useMemo(
     () =>
-      account ? account.positions.filter((position) => position && position.status === PositionStatus.QUEUED) : [],
+      account && account.positions
+        ? account.positions.filter((position) => position && position.status === PositionStatus.QUEUED)
+        : [],
     [account],
   );
 
   const onConfirmAlpacaOrder = async (rawTradeEntry: IRawTradeEntry) => {
+    const { newSymbol } = rawTradeEntry;
     try {
-      await API.post('/api/new-position', { rawTradeEntry });
+      const newAccount = await submitNewPosition(rawTradeEntry);
       setNewTradeModalOpen(false);
+      onAccountUpdated(newAccount, `Position ${newSymbol} added.`);
+      setSelectedPosition(newAccount.positions.find((position) => position.symbol === newSymbol));
     } catch (e) {
       console.error(e);
+      onAccountUpdated(undefined, `Failed to save new position ${newSymbol}.`);
+    }
+  };
+
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
+  const devClearOrders = async () => {
+    const newAccount = await clearState();
+    onAccountUpdated(newAccount, 'Cleared account state.');
+  };
+
+  const handleSnackbarClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setIsSnackbarOpen(false);
+    setSnackbarMessage('');
+  };
+
+  const onAccountUpdated = (newAccount: Account | undefined, msg?: string) => {
+    if (account) {
+      setAccount(newAccount);
+    }
+    if (msg) {
+      setSnackbarMessage(msg);
+      setIsSnackbarOpen(true);
     }
   };
 
   return (
     <Box sx={{ display: 'flex' }} className='app'>
       <CssBaseline />
-      <AppBar position='fixed' open={open}>
+      <AppBar position='fixed' open={drawerOpen}>
         <Toolbar
           sx={{
             display: 'flex',
@@ -110,7 +141,7 @@ export const App = () => {
               aria-label='open drawer'
               onClick={handleDrawerOpen}
               edge='start'
-              sx={{ mr: 2, ...(open && { display: 'none' }) }}
+              sx={{ mr: 2, ...(drawerOpen && { display: 'none' }) }}
             >
               <MenuIcon />
             </IconButton>
@@ -121,25 +152,44 @@ export const App = () => {
               Trading Assistant
             </Typography>
           </Box>
-          <Box> Account </Box>
+          <Box>
+            <IconButton color='inherit' onClick={() => setIsAccountModalOpen(true)} edge='end'>
+              <HomeIcon />
+            </IconButton>
+          </Box>
         </Toolbar>
       </AppBar>
+
+      <Dialog open={isAccountModalOpen}>
+        <DialogTitle>
+          Account options
+          <IconButton aria-label='close' onClick={() => setIsAccountModalOpen(false)}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <Button onClick={devClearOrders}> DEV: CLEAR STATE </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Snackbar open={isSnackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose} message={snackbarMessage} />
 
       {newTradeModalOpen && <NewTradeModal onCancel={onAddTradeDialogCancel} onConfirm={onConfirmAlpacaOrder} />}
 
       <StockDrawer
-        open={open}
+        open={drawerOpen}
         runners={runners}
         openTrades={openTrades}
         queuedTrades={queuedTrades}
         handleDrawerClose={handleDrawerClose}
         onSymbolClicked={onSymbolClicked}
         onAddTradeClicked={onAddTradeClicked}
+        selectedPosition={selectedPosition}
       ></StockDrawer>
 
-      <Main open={open}>
+      <Main open={drawerOpen}>
         <DrawerHeader />
-        {selectedPosition && <TradeDetailsCard position={selectedPosition} />}
+        {selectedPosition && <TradeDetailsCard position={selectedPosition} onAccountUpdated={onAccountUpdated} />}
       </Main>
     </Box>
   );

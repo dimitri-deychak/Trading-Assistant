@@ -5,6 +5,9 @@ import {
   IListenerSimpleStopLossRule,
   IPosition,
   ListenerExitSide,
+  ListenerQuantityType,
+  ListenerTimeRule,
+  ListenerTriggerType,
   PositionStatus,
 } from '../../../shared/interfaces';
 import { db } from '../../database';
@@ -148,8 +151,10 @@ const handleBreakEvenOnRest = async (positionState: IPosition) => {
   };
 
   const newStopLossActiveListener: IListenerSimpleStopLossRule = {
+    triggerType: ListenerTriggerType.PRICE,
     side: ListenerExitSide.STOP,
-    triggerPrice: twoCentsAboveNewStopPrice,
+    timeRule: ListenerTimeRule.AS_SOON_AS_TRIGGER_OCCURS,
+    triggerValue: twoCentsAboveNewStopPrice,
     closeOrder: newStopLossClosePositionOrder,
   };
 

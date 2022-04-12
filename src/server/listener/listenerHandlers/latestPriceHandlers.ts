@@ -2,26 +2,31 @@ import { Trade, Order } from '@master-chief/alpaca';
 import { IPosition, IListenerExitRule, ListenerExitSide } from '../../../shared/interfaces';
 import { alpacaClient } from '../../alpacaClient';
 import { db } from '../../database';
-import { tradeStream } from '../listener';
+import { tradeStream } from '../tradeListener';
 
 export const latestPriceHandler = async (trade: Trade) => {
   const { p: tradePrice, S: symbol } = trade;
-  const positionState = db.getAccountPosition(symbol);
 
-  if (!positionState) {
-    if (symbol) {
-      console.log(`Unsubscribing from stream for ${symbol}.`);
-      tradeStream.unsubscribe('trades', [symbol]);
-    }
-    return;
-  }
+  try {
+    const positionState = db.getAccountPosition(symbol);
 
-  // process all activeListeners
-  const { activeListeners } = positionState;
-  if (activeListeners.length > 0) {
-    for (const activeListener of positionState.activeListeners) {
-      await processActiveListener(positionState, activeListener, tradePrice);
+    if (!positionState) {
+      if (symbol) {
+        console.log(`Unsubscribing from stream for ${symbol}.`);
+        tradeStream.unsubscribe('trades', [symbol]);
+      }
+      return;
     }
+
+    // process all activeListeners
+    const { activeListeners } = positionState;
+    if (activeListeners.length > 0) {
+      for (const activeListener of positionState.activeListeners) {
+        await processActiveListener(positionState, activeListener, tradePrice);
+      }
+    }
+  } catch (e) {
+    console.log(`Error occurred in latestPriceHandler for ${symbol}`, e.message);
   }
 };
 
@@ -50,10 +55,10 @@ const processActiveListener = async (
 };
 
 const handleTakeProfitActiveListener = async (
-  { triggerPrice, order: closeOrder }: IListenerExitRule,
+  { triggerValue, order: closeOrder }: IListenerExitRule,
   tradePrice: number,
 ) => {
-  if (tradePrice >= triggerPrice) {
+  if (tradePrice >= triggerValue) {
     try {
       const order = await alpacaClient.closePosition(closeOrder);
       return order;
@@ -64,10 +69,10 @@ const handleTakeProfitActiveListener = async (
 };
 
 const handleStopLossActiveListener = async (
-  { triggerPrice, order: closeOrder }: IListenerExitRule,
+  { triggerValue, order: closeOrder }: IListenerExitRule,
   tradePrice: number,
 ) => {
-  if (tradePrice <= triggerPrice) {
+  if (tradePrice <= triggerValue) {
     try {
       const order = await alpacaClient.closePosition(closeOrder);
       return order;

@@ -18,6 +18,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 import { IPosition } from '../../shared/interfaces';
+import { ListItemButton } from '@mui/material';
 
 const POLYGON_IO_KEY = 'ECYjjw8nx1mWadz2CpnT4z9t2TFpiiG9';
 
@@ -29,6 +30,7 @@ type OwnProps = {
   handleDrawerClose: () => void;
   onSymbolClicked: (position: IPosition) => void;
   onAddTradeClicked: () => void;
+  selectedPosition: IPosition;
 };
 
 export const StockDrawer: VFC<OwnProps> = ({
@@ -39,6 +41,7 @@ export const StockDrawer: VFC<OwnProps> = ({
   handleDrawerClose,
   onSymbolClicked,
   onAddTradeClicked,
+  selectedPosition,
 }) => {
   const theme = useTheme();
 
@@ -69,10 +72,13 @@ export const StockDrawer: VFC<OwnProps> = ({
           </Typography>
         </ListItem>
         {runners.map((position, index) => (
-          <ListItem button key={position.symbol} onClick={() => onSymbolClicked(position)}>
-            <ListItemIcon></ListItemIcon>
-            <ListItemText primary={position.symbol} />
-          </ListItem>
+          <ListItemButton
+            key={position.symbol + index}
+            onClick={() => onSymbolClicked(position)}
+            selected={selectedPosition?.symbol === position.symbol}
+          >
+            {position.symbol}
+          </ListItemButton>
         ))}
       </List>
       <Divider />
@@ -83,10 +89,13 @@ export const StockDrawer: VFC<OwnProps> = ({
           </Typography>
         </ListItem>
         {openTrades.map((position, index) => (
-          <ListItem button key={position.symbol} onClick={() => onSymbolClicked(position)}>
-            <ListItemIcon></ListItemIcon>
-            <ListItemText primary={position.symbol} />
-          </ListItem>
+          <ListItemButton
+            key={position.symbol + index}
+            onClick={() => onSymbolClicked(position)}
+            selected={selectedPosition?.symbol === position.symbol}
+          >
+            {position.symbol}
+          </ListItemButton>
         ))}
       </List>
       <Divider />
@@ -98,10 +107,13 @@ export const StockDrawer: VFC<OwnProps> = ({
           </Typography>
         </ListItem>
         {queuedTrades.map((position, index) => (
-          <ListItem button key={position.symbol} onClick={() => onSymbolClicked(position)}>
-            <ListItemIcon></ListItemIcon>
-            <ListItemText primary={position.symbol} />
-          </ListItem>
+          <ListItemButton
+            key={position.symbol + index}
+            onClick={() => onSymbolClicked(position)}
+            selected={selectedPosition?.symbol === position.symbol}
+          >
+            {position.symbol}
+          </ListItemButton>
         ))}
       </List>
       <Divider />

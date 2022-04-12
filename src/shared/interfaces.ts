@@ -29,24 +29,61 @@ export enum ListenerExitSide {
   STOP,
 }
 
-export interface IListenerSimpleTargetExitRule {
+export const ListenerSideDisplayMap = {
+  'Stop loss': ListenerExitSide.STOP,
+  'Take profit': ListenerExitSide.TAKE_PROFIT,
+};
+
+export enum ListenerTriggerType {
+  PRICE,
+  SMA,
+  EMA,
+}
+
+export const ListenerTriggerTypeDisplayMap = {
+  [ListenerTriggerType.PRICE]: 'Price',
+  [ListenerTriggerType.SMA]: 'Simple Moving Avg (Daily)',
+  [ListenerTriggerType.EMA]: 'Exp Moving Avg (Daily)',
+};
+
+export enum ListenerTimeRule {
+  AS_SOON_AS_TRIGGER_OCCURS,
+  DAILY_CLOSE,
+}
+
+export const ListenerTimeRuleDisplayMap = {
+  [ListenerTimeRule.AS_SOON_AS_TRIGGER_OCCURS]: 'As soon as trigger event occurs',
+  [ListenerTimeRule.DAILY_CLOSE]: 'On daily close',
+};
+
+export enum ListenerQuantityType {
+  PERCENTAGE,
+  QUANTITY,
+}
+
+export const ListenerQuantityTypeDisplayMap = {
+  [ListenerQuantityType.PERCENTAGE]: 'Percent of open position',
+  [ListenerQuantityType.QUANTITY]: 'Number of shares',
+};
+
+export interface IListenerSimpleTargetExitRule extends IListenerExitRuleBase {
   side: ListenerExitSide.TAKE_PROFIT;
-  triggerPrice: number;
-  closeOrder: ClosePosition;
-  order?: Order;
   breakEvenOnRest?: boolean;
 }
 
-export interface IListenerSimpleStopLossRule {
+export interface IListenerSimpleStopLossRule extends IListenerExitRuleBase {
   side: ListenerExitSide.STOP;
-  triggerPrice: number;
-  closeOrder: ClosePosition;
-  order?: Order;
 }
 
-export type IListenerSimpleExitRule = IListenerSimpleTargetExitRule | IListenerSimpleStopLossRule;
+export type IListenerExitRule = IListenerSimpleTargetExitRule | IListenerSimpleStopLossRule;
 
-export type IListenerExitRule = IListenerSimpleExitRule;
+export type IListenerExitRuleBase = {
+  triggerType: ListenerTriggerType;
+  timeRule: ListenerTimeRule;
+  triggerValue: number;
+  closeOrder: ClosePosition;
+  order?: Order;
+};
 
 export interface IEntryRule {
   buyOrder: Order;
