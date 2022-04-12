@@ -1,4 +1,5 @@
 import { AlpacaStream } from '@master-chief/alpaca';
+import { TradeUpdate } from '@master-chief/alpaca/@types/entities';
 import { ALPACA_API_KEYS } from '../../config';
 import { db } from '../../database';
 import { accountTradeUpdatesHandler } from './accountTradeHandlers';
@@ -18,4 +19,8 @@ accountStream.once('authenticated', async () => {
   }
 
   accountStream.subscribe('trade_updates');
+});
+
+accountStream.on('trade_updates', async (tradeUpdate: TradeUpdate) => {
+  await accountTradeUpdatesHandler(tradeUpdate);
 });
