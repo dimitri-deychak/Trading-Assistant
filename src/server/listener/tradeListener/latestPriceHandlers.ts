@@ -3,6 +3,7 @@ import { IPosition, IListenerExitRule, ListenerExitSide } from '../../../shared/
 import { alpacaClient } from '../../alpacaClient';
 import { db } from '../../database';
 import { tradeStream } from './tradeListener';
+import { sleep } from '../../../shared/sleep';
 
 export const latestPriceHandler = async (trade: Trade) => {
   const { p: tradePrice, S: symbol } = trade;

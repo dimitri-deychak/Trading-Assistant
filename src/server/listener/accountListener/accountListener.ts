@@ -2,6 +2,7 @@ import { AlpacaStream } from '@master-chief/alpaca';
 import { TradeUpdate } from '@master-chief/alpaca/@types/entities';
 import { ALPACA_API_KEYS } from '../../config';
 import { db } from '../../database';
+import { enqueue } from '../queue';
 import { accountTradeUpdatesHandler } from './accountTradeHandlers';
 
 export const accountStream = new AlpacaStream({
@@ -22,8 +23,12 @@ accountStream.once('authenticated', async () => {
 });
 
 accountStream.on('trade_updates', async (tradeUpdate: TradeUpdate) => {
-  console.log({ tradeUpdate });
-  await accountTradeUpdatesHandler(tradeUpdate);
+  enqueue(async () => {
+    console.log(`Begin trade update handler for ${tradeUpdate.order.symbol}`);
+    console.log({ tradeUpdate });
+    await accountTradeUpdatesHandler(tradeUpdate);
+    console.log(`End trade update handler for ${tradeUpdate.order.symbol}`);
+  });
 });
 
 accountStream.on('subscription', (message) => {
