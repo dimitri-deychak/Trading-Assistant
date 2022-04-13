@@ -3,6 +3,9 @@ import { ALPACA_API_KEYS } from '../../config';
 import { db } from '../../database';
 import { latestPriceHandler } from './latestPriceHandlers';
 
+let currentPromise = Promise.resolve();
+const enqueue = (promise: (value: void) => void | PromiseLike<void>) => (currentPromise = currentPromise.then(promise));
+
 export const tradeStream = new AlpacaStream({
   credentials: {
     key: ALPACA_API_KEYS.API_KEY_ID,
@@ -23,7 +26,11 @@ tradeStream.once('authenticated', async () => {
 });
 
 tradeStream.on('trade', async (trade: Trade) => {
-  await latestPriceHandler(trade);
+  enqueue(async () => {
+    console.log(`Begin Handler for ${trade.S}`);
+    await latestPriceHandler(trade);
+    console.log(`End Handler for ${trade.S}`);
+  });
 });
 
 tradeStream.on('subscription', (message) => {
