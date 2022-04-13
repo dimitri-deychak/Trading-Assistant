@@ -58,8 +58,11 @@ const processActiveListener = async (
   }
 };
 
-const handleTakeProfitActiveListener = async ({ triggerValue, closeOrder }: IListenerExitRule, tradePrice: number) => {
-  if (tradePrice >= triggerValue) {
+const handleTakeProfitActiveListener = async (
+  { triggerValue, closeOrder, order: existingOrderAlreadyPlacedForListener }: IListenerExitRule,
+  tradePrice: number,
+) => {
+  if (tradePrice >= triggerValue && !existingOrderAlreadyPlacedForListener) {
     try {
       const order = await alpacaClient.closePosition(closeOrder);
       console.log('Firing take profit close order: ', JSON.stringify(closeOrder));
@@ -70,8 +73,11 @@ const handleTakeProfitActiveListener = async ({ triggerValue, closeOrder }: ILis
   }
 };
 
-const handleStopLossActiveListener = async ({ triggerValue, closeOrder }: IListenerExitRule, tradePrice: number) => {
-  if (tradePrice <= triggerValue) {
+const handleStopLossActiveListener = async (
+  { triggerValue, closeOrder, order: existingOrderAlreadyPlacedForListener }: IListenerExitRule,
+  tradePrice: number,
+) => {
+  if (tradePrice <= triggerValue && !existingOrderAlreadyPlacedForListener) {
     try {
       const order = await alpacaClient.closePosition(closeOrder);
       console.log('Firing stop loss close order: ', JSON.stringify(closeOrder));
