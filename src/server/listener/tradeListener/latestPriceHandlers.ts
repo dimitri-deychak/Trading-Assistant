@@ -16,10 +16,8 @@ export const latestPriceHandler = async (trade: Trade) => {
     const positionState = db.getAccountPosition(symbol);
 
     if (!positionState) {
-      if (symbol) {
-        console.log(`Unsubscribing from stream for ${symbol}.`);
-        tradeStream.unsubscribe('trades', [symbol]);
-      }
+      console.log(`Unsubscribing from stream for ${symbol}.`);
+      tradeStream.unsubscribe('trades', [symbol]);
       return;
     }
 
