@@ -34,7 +34,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 
 import { formatNumber } from '../../shared/utils';
-import { getDefaultStopLossListener } from '../../shared/constants';
+import { getDefaultStopLossListener } from '../../shared/utils';
 import { updatePosition } from '../utils/api';
 
 type ListenersFormProps = { position: IPosition; onAccountUpdated: (newAccount: Account, msg?: string) => void };

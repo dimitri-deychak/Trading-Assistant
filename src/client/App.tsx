@@ -16,7 +16,7 @@ import { TradeDetailsCard } from './components/TradeDetailsCard';
 
 import { Account, IPosition, IRawTradeEntry, PositionStatus } from '../shared/interfaces';
 
-import { IEnv } from '../shared/IEnv';
+import { IEnv } from '../shared/interfaces';
 import { clearState, getAccount, getEnv, submitNewPosition } from './utils/api';
 import Dialog from '@mui/material/Dialog';
 import { Button, DialogContent, DialogTitle, Snackbar } from '@mui/material';

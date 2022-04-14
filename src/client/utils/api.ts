@@ -1,6 +1,6 @@
 import { AlpacaClient, DefaultCredentials, Trade } from '@master-chief/alpaca';
 import API, { AxiosResponse } from 'axios';
-import { IEnv } from '../../shared/IEnv';
+import { IEnv } from '../../shared/interfaces';
 import { Account, IPosition, IRawTradeEntry } from '../../shared/interfaces';
 
 export const getEnv = async () => {
