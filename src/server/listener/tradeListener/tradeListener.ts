@@ -20,7 +20,7 @@ tradeStream.once('authenticated', async () => {
     await db.init();
   }
 
-  const symbolsToSubscribeTo = testSymbols; //db.getAccountPositions().map((position) => position.symbol);
+  const symbolsToSubscribeTo = db.getAccountPositions().map((position) => position.symbol);
   tradeStream.subscribe('trades', symbolsToSubscribeTo);
 });
 
