@@ -14,6 +14,7 @@ import {
 } from '../../shared/interfaces';
 import { ALPACA_API_KEYS, IS_DEV } from '../config';
 import { db } from '../database';
+import { enqueue } from '../listener/queue';
 
 export const getEnvironmentHandler = async (_: Request, res: Response) => {
   res.send({ ...ALPACA_API_KEYS, IS_DEV });
@@ -33,26 +34,30 @@ export const getLastTradeHandler = async (req: Request, res: Response) => {
 };
 
 export const newPositionHandler = async (req: Request, res: Response) => {
-  try {
-    const { rawTradeEntry } = req.body as { rawTradeEntry: IRawTradeEntry };
-    const position = await initiatePositionFromRawTradeEntry(rawTradeEntry);
-    const newAccount = await db.putAccountPosition(position);
-    res.send(newAccount);
-  } catch (e) {
-    console.error(e);
-    res.sendStatus(400);
-  }
+  enqueue(async () => {
+    try {
+      const { rawTradeEntry } = req.body as { rawTradeEntry: IRawTradeEntry };
+      const position = await initiatePositionFromRawTradeEntry(rawTradeEntry);
+      const newAccount = await db.putAccountPosition(position);
+      res.send(newAccount);
+    } catch (e) {
+      console.error(e);
+      res.sendStatus(400);
+    }
+  });
 };
 
 export const updatePositionHandler = async (req: Request, res: Response) => {
-  try {
-    const { position } = req.body as { position: IPosition };
-    const newAccount = await db.putAccountPosition(position);
-    res.send(newAccount);
-  } catch (e) {
-    console.error(e);
-    res.sendStatus(400);
-  }
+  enqueue(async () => {
+    try {
+      const { position } = req.body as { position: IPosition };
+      const newAccount = await db.putAccountPosition(position);
+      res.send(newAccount);
+    } catch (e) {
+      console.error(e);
+      res.sendStatus(400);
+    }
+  });
 };
 
 export const getAccountHandler = async (_: Request, res: Response) => {
@@ -138,13 +143,15 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
 };
 
 export const clearStateHandler = async (_: Request, res: Response) => {
-  try {
-    await alpacaClient.closePositions({ cancel_orders: true });
-    await db.putNewAccount();
-    const newAccount = db.getAccount();
-    res.send({ newAccount });
-  } catch (e) {
-    console.error(e);
-    res.sendStatus(400);
-  }
+  enqueue(async () => {
+    try {
+      await alpacaClient.closePositions({ cancel_orders: true });
+      await db.putNewAccount();
+      const newAccount = db.getAccount();
+      res.send({ newAccount });
+    } catch (e) {
+      console.error(e);
+      res.sendStatus(400);
+    }
+  });
 };
