@@ -56,7 +56,6 @@ class Database {
     } catch (e) {
       if (e.Code === DB_ERROR.ACCOUNT_DOES_NOT_EXIST) {
         await this.putNewAccount();
-        await this.syncAccount();
       } else {
         console.error('S3 Account Read Error', e);
       }
