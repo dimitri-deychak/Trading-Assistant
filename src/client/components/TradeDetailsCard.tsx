@@ -7,15 +7,17 @@ import CardMedia from '@mui/material/CardMedia';
 import CardContent from '@mui/material/CardContent';
 import CardActions from '@mui/material/CardActions';
 import Collapse from '@mui/material/Collapse';
+import ContentCut from '@mui/icons-material/ContentCut';
 import Avatar from '@mui/material/Avatar';
 import IconButton, { IconButtonProps } from '@mui/material/IconButton';
 import { red } from '@mui/material/colors';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import TradingViewWidget from 'react-tradingview-widget';
-import { Box } from '@mui/material';
+import { Box, Button, ListItemIcon, ListItemText, Menu, MenuItem, MenuList, Typography } from '@mui/material';
 import { Account, IPosition, ListenerExitSide, PositionStatus } from '../../shared/interfaces';
 import { ListenersForm } from './TradeForm';
+import { removePosition } from '../utils/api';
 
 interface ExpandMoreProps extends IconButtonProps {
   expand: boolean;
@@ -38,11 +40,28 @@ type TradeDetailsCardProps = {
 };
 
 export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccountUpdated }) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handlePositionMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handlePositionMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleRemovePositionClicked = async () => {
+    const newAccount = await removePosition(position);
+    handlePositionMenuClose();
+    onAccountUpdated(newAccount, `${position.symbol} removed from server and database.`);
+  };
+
   const [expanded, setExpanded] = useState(true);
 
   const handleExpandClick = () => {
     setExpanded(!expanded);
   };
+
+  console.log({ position });
 
   return (
     <Card sx={{ flex: 1, height: 'calc(100vh - 64px - 24px - 24px)', display: 'flex', flexDirection: 'column' }}>
@@ -53,9 +72,33 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
           </Avatar>
         }
         action={
-          <IconButton aria-label='settings'>
-            <MoreVertIcon />
-          </IconButton>
+          <>
+            <IconButton
+              id='basic-button'
+              aria-controls={open ? 'basic-menu' : undefined}
+              aria-haspopup='true'
+              aria-expanded={open ? 'true' : undefined}
+              onClick={handlePositionMenuClick}
+            >
+              <MoreVertIcon />
+            </IconButton>
+            <Menu
+              id='basic-menu'
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handlePositionMenuClose}
+              MenuListProps={{
+                'aria-labelledby': 'basic-button',
+              }}
+            >
+              <MenuItem onClick={handleRemovePositionClicked}>
+                <ListItemIcon>
+                  <ContentCut fontSize='small' />
+                </ListItemIcon>
+                <ListItemText>Liquidate and remove position </ListItemText>
+              </MenuItem>
+            </Menu>
+          </>
         }
         title={position.symbol}
         subheader='Date entered'
@@ -63,13 +106,15 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
 
       <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <CardMedia sx={{ margin: '24px', width: '90%', flex: 1, overflow: 'hidden' }}>
-          <TradingViewWidget
-            symbol={position.symbol}
-            autosize
-            show_bottom_toolbar={true}
-            locale='en'
-            hide_side_toolbar={false}
-          />
+          {position && (
+            <TradingViewWidget
+              symbol={position.symbol}
+              autosize
+              show_bottom_toolbar={true}
+              locale='en'
+              hide_side_toolbar={false}
+            />
+          )}
         </CardMedia>
         <ListenersForm position={position} onAccountUpdated={onAccountUpdated} />
       </Box>

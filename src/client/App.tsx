@@ -116,8 +116,14 @@ export const App = () => {
   };
 
   const onAccountUpdated = (newAccount: Account | undefined, msg?: string) => {
-    if (account) {
+    setSelectedPosition(undefined);
+    if (newAccount) {
       setAccount(newAccount);
+      const newSelectedPosition =
+        (newAccount.positions.find((position) => position.symbol === selectedPosition?.symbol) ||
+          newAccount.positions[0]) ??
+        undefined;
+      setSelectedPosition(newSelectedPosition);
     }
     if (msg) {
       setSnackbarMessage(msg);

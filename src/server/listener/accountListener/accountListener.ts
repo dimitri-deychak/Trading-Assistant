@@ -24,10 +24,14 @@ accountStream.once('authenticated', async () => {
 
 accountStream.on('trade_updates', async (tradeUpdate: TradeUpdate) => {
   enqueue(async () => {
-    console.log(`Begin trade update handler for ${tradeUpdate.order.symbol}`);
-    console.log({ tradeUpdate });
-    await accountTradeUpdatesHandler(tradeUpdate);
-    console.log(`End trade update handler for ${tradeUpdate.order.symbol}`);
+    try {
+      console.log(`Begin trade update handler for ${tradeUpdate.order.symbol}`);
+      console.log({ tradeUpdate });
+      await accountTradeUpdatesHandler(tradeUpdate);
+      console.log(`End trade update handler for ${tradeUpdate.order.symbol}`);
+    } catch (e) {
+      console.error(e);
+    }
   });
 });
 

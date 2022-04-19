@@ -33,6 +33,11 @@ export const updatePosition = async (position: IPosition) => {
   return newAccount as Account;
 };
 
+export const removePosition = async (position: IPosition) => {
+  const { data: newAccount } = await API.post('/api/remove-position', { position });
+  return newAccount as Account;
+};
+
 export const getAlpacaClient = (env: IEnv) => {
   const { API_KEY_ID, SECRET_KEY, IS_DEV } = env;
   return new AlpacaClient({

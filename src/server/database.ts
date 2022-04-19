@@ -64,10 +64,6 @@ class Database {
 
   getAccountPosition(symbol: string) {
     const positionState = this.account.positions.find((position) => position.symbol === symbol);
-    if (!positionState) {
-      throw new Error(`Position State not found ${symbol} in S3`);
-    }
-
     return positionState;
   }
 
@@ -76,6 +72,14 @@ class Database {
   }
 
   getAccount() {
+    return this.account;
+  }
+
+  async removePositionFromAccountBySymbol(symbol: string) {
+    const { positions } = this.account;
+    const newPositions = positions.filter((position) => position.symbol !== symbol);
+    const newAccount = { ...this.account, positions: newPositions };
+    await this.putAccount(newAccount);
     return this.account;
   }
 
@@ -148,4 +152,3 @@ const streamToString = async (stream) => {
 
 const { API_KEY_ID, SECRET_KEY } = ALPACA_API_KEYS;
 export const db = new Database(API_KEY_ID, SECRET_KEY);
-// db.putNewAccount();

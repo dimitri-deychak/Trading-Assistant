@@ -4,6 +4,7 @@ import { Request, Response } from 'express';
 import { alpacaClient } from '../alpacaClient';
 import {
   IListenerExitRule,
+  IListenerSimpleTargetExitRule,
   IPosition,
   IRawTradeEntry,
   ListenerExitSide,
@@ -102,14 +103,15 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
     qty: totalQuantity,
   };
 
-  const deRiskTargetListener = {
+  const deRiskTargetListener: IListenerSimpleTargetExitRule = {
     triggerType: ListenerTriggerType.PRICE,
     timeRule: ListenerTimeRule.AS_SOON_AS_TRIGGER_OCCURS,
     side: ListenerExitSide.TAKE_PROFIT,
     triggerValue: rMultipleTargetPrice,
+    breakEvenOnRest: true,
     closeOrder: {
       symbol: newSymbol,
-      percentage: ONE_THIRD,
+      percentage: ONE_THIRD * 100,
     } as ClosePosition,
   };
 
@@ -149,6 +151,41 @@ export const clearStateHandler = async (_: Request, res: Response) => {
       await db.putNewAccount();
       const newAccount = db.getAccount();
       res.send({ newAccount });
+    } catch (e) {
+      console.error(e);
+      res.sendStatus(400);
+    }
+  });
+};
+
+export const cancelAndClosePosition = (req: Request, res: Response) => {
+  enqueue(async () => {
+    try {
+      const {
+        position: { symbol },
+      } = req.body as { position: IPosition };
+
+      const account = db.getAccount();
+      const { positions } = account;
+
+      const position = positions.find((position) => position.symbol === symbol);
+      if (!position) {
+        throw new Error('Position not found, can not cancel');
+      }
+
+      const ordersOnServer = await alpacaClient.getOrders({ symbols: [symbol], status: 'open' });
+
+      for (const orderOnServer of ordersOnServer) {
+        await alpacaClient.cancelOrder({ order_id: orderOnServer.id });
+      }
+
+      if (position.positionQty > 0) {
+        await alpacaClient.closePosition({ symbol });
+      }
+
+      const newAccount = await db.removePositionFromAccountBySymbol(symbol);
+
+      res.send(newAccount);
     } catch (e) {
       console.error(e);
       res.sendStatus(400);

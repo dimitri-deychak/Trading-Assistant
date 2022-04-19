@@ -1,6 +1,7 @@
 import bodyParser from 'body-parser';
 import { Router } from 'express';
 import {
+  cancelAndClosePosition,
   clearStateHandler,
   getAccountHandler,
   getEnvironmentHandler,
@@ -19,5 +20,6 @@ export function apiRouter() {
   router.get('/api/last-trade', getLastTradeHandler);
   router.get('/api/env', getEnvironmentHandler);
   router.get('/api/account', getAccountHandler);
+  router.post('/api/remove-position', cancelAndClosePosition);
   return router;
 }

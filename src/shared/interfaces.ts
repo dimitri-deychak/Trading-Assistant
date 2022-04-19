@@ -87,6 +87,7 @@ export type IListenerExitRuleBase = {
 
 export interface IEntryRule {
   buyOrder: Order;
+  order?: Order;
   listenersToActivate: IListenerExitRule[];
 }
 

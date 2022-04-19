@@ -20,17 +20,27 @@ export const accountTradeUpdatesHandler = async (tradeUpdate: TradeUpdate) => {
     throw new Error('Getting trade updates for untracked position - ' + symbol);
   }
 
+  if (!clientOrderId) {
+    throw new Error('Missing Client Order Id in position - ' + symbol);
+  }
+
   const isBuyOrder = clientOrderId === positionState.entryRule.buyOrder.client_order_id;
   const orderFillEvent = ['fill', 'partial_fill'].includes(event);
   if (isBuyOrder && orderFillEvent) {
     await handleBuyOrderFilled(positionState, tradeUpdate);
   }
 
-  const sellOrder = positionState.activeListeners.find(
-    (activeListener) => activeListener.order?.client_order_id === clientOrderId,
+  const sellOrder = positionState.inactiveListeners.find(
+    (inactiveListener) => inactiveListener.order?.client_order_id === clientOrderId,
   );
+
   if (sellOrder && orderFillEvent) {
     await handleSellOrderFilled(positionState, tradeUpdate);
+  } else {
+    if (orderFillEvent) {
+      console.log(JSON.stringify({ debug: { tradeUpdate, positionState, sellOrder } }));
+      throw new Error('Matching saved sell order not found for fill event - ' + symbol);
+    }
   }
 };
 
@@ -74,16 +84,21 @@ const handleSellOrderFilled = async (positionState: IPosition, tradeUpdate: Trad
 const handleSellOrderFill = async (positionState: IPosition, tradeUpdate: TradeUpdate) => {
   const { inactiveListeners, symbol } = positionState;
   const { order, position_qty: positionQty } = tradeUpdate;
-  const { client_order_id: orderId } = order;
+  const { client_order_id: savedClientOrderId } = order;
 
-  const filledListener = inactiveListeners.find(
-    (inactiveListener) => inactiveListener?.order.client_order_id === orderId,
+  let filledListener = inactiveListeners.find(
+    (inactiveListener) => inactiveListener?.order?.client_order_id === savedClientOrderId,
   );
   if (!filledListener) {
     throw new Error(
-      `Sell fill occurred without a matching order in activeListeners for ${symbol}. Order id ${orderId}`,
+      `Sell fill occurred without a matching order in activeListeners for ${symbol}. Order id ${savedClientOrderId}`,
     );
   }
+
+  // Keep in place attribute update
+  filledListener.order = order;
+  // Update db with order state
+  await db.putAccountPosition(positionState);
 
   if (positionQty > 0) {
     const shouldBreakEvenOnRest =
@@ -108,7 +123,7 @@ const handleBreakEvenOnRest = async (positionState: IPosition) => {
     activeListeners,
     inactiveListeners,
     entryRule: {
-      buyOrder: { filled_avg_price: avgEntryPrice },
+      order: { filled_avg_price: avgEntryPrice },
     },
     positionQty,
   } = positionState;
@@ -124,18 +139,25 @@ const handleBreakEvenOnRest = async (positionState: IPosition) => {
 
   inactiveListeners.forEach((inactiveListener) => {
     const { order } = inactiveListener;
-    const { filled_avg_price: filledAvgPrice, filled_qty: filledQty } = order;
 
-    const costBasisForListener = avgEntryPrice * filledQty;
-    breakEvenCounters.costBasisSoFar += costBasisForListener;
+    if (inactiveListener.side === ListenerExitSide.TAKE_PROFIT && order) {
+      const { filled_avg_price: filledAvgPrice, filled_qty: filledQty } = order;
 
-    const proceedsForListener = filledAvgPrice * filledQty;
-    breakEvenCounters.proceedsSoFar += proceedsForListener;
+      const costBasisForListener = avgEntryPrice * filledQty;
+      breakEvenCounters.costBasisSoFar += costBasisForListener;
+
+      const proceedsForListener = filledAvgPrice * filledQty;
+      breakEvenCounters.proceedsSoFar += proceedsForListener;
+    }
   });
 
   const { proceedsSoFar, costBasisSoFar } = breakEvenCounters;
 
+  console.log({ breakEvenCounters });
+
   const profitSoFar = Math.max(0, proceedsSoFar - costBasisSoFar);
+
+  console.log({ profitSoFar });
 
   if (profitSoFar === 0) {
     throw new Error(`Trying to set stops to break even on ${symbol} but does not have any profit yet.`);
