@@ -42,3 +42,8 @@ tradeStream.on('subscription', (message) => {
     console.log(message);
   }
 });
+
+export const updateSubscriptionsToAccountPositions = () => {
+  const symbolsToSubscribeTo = db.getAccountPositions().map((position) => position.symbol);
+  tradeStream.subscribe('trades', symbolsToSubscribeTo);
+};

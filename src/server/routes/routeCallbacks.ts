@@ -16,6 +16,7 @@ import {
 import { ALPACA_API_KEYS, IS_DEV } from '../config';
 import { db } from '../database';
 import { enqueue } from '../listener/queue';
+import { updateSubscriptionsToAccountPositions } from '../listener/tradeListener/tradeListener';
 
 export const getEnvironmentHandler = async (_: Request, res: Response) => {
   res.send({ ...ALPACA_API_KEYS, IS_DEV });
@@ -40,6 +41,7 @@ export const newPositionHandler = async (req: Request, res: Response) => {
       const { rawTradeEntry } = req.body as { rawTradeEntry: IRawTradeEntry };
       const position = await initiatePositionFromRawTradeEntry(rawTradeEntry);
       const newAccount = await db.putAccountPosition(position);
+      updateSubscriptionsToAccountPositions();
       res.send(newAccount);
     } catch (e) {
       console.error(e);

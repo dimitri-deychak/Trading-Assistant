@@ -28,6 +28,7 @@ export const accountTradeUpdatesHandler = async (tradeUpdate: TradeUpdate) => {
   const orderFillEvent = ['fill', 'partial_fill'].includes(event);
   if (isBuyOrder && orderFillEvent) {
     await handleBuyOrderFilled(positionState, tradeUpdate);
+    return;
   }
 
   const sellOrder = positionState.inactiveListeners.find(
