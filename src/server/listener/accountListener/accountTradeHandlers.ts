@@ -52,6 +52,7 @@ const handleBuyOrderFilled = async (positionState: IPosition, tradeUpdate: Trade
   const { order, position_qty: positionQty } = tradeUpdate;
   const {
     entryRule: { listenersToActivate, ...entryRule },
+    activeListeners,
   } = positionState;
 
   const newEntryRule = {
@@ -60,9 +61,11 @@ const handleBuyOrderFilled = async (positionState: IPosition, tradeUpdate: Trade
     order,
   };
 
+  const newActiveListeners = [...activeListeners, ...(listenersToActivate || [])];
+
   const newPositionState: IPosition = {
     ...positionState,
-    activeListeners: listenersToActivate,
+    activeListeners: newActiveListeners,
     status: PositionStatus.OPEN,
     entryRule: newEntryRule,
     positionQty,
