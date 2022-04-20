@@ -75,6 +75,15 @@ class Database {
     return this.account;
   }
 
+  async saveProcessExitedDate() {
+    this.account.lastProcessExitDateTime = new Date().toISOString();
+    await this.putAccount(this.account);
+  }
+
+  getProcessExitDate() {
+    return this.account.lastProcessExitDateTime;
+  }
+
   async removePositionFromAccountBySymbol(symbol: string) {
     const { positions } = this.account;
     const newPositions = positions.filter((position) => position.symbol !== symbol);

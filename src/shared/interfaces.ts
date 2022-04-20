@@ -1,4 +1,4 @@
-import { ClosePosition, Order, PlaceOrder } from '@master-chief/alpaca';
+import { ClosePosition, Order, PlaceOrder, TradeActivity } from '@master-chief/alpaca';
 
 // 3 Tiers of positions
 // runners are trades that have some profit taken and stop moved to break even, so essentially risk free
@@ -11,9 +11,16 @@ export enum PositionStatus {
   CLOSED,
 }
 
+export interface CustomTradeUpdate extends TradeActivity {
+  order: Order;
+  position_qty: number;
+  event: 'fill' | 'partial_fill';
+}
+
 export interface Account {
   positions: IPosition[];
   closedPositions: IPosition[];
+  lastProcessExitDateTime: string;
 }
 
 export interface IRawTradeEntry {

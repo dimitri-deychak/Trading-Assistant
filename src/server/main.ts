@@ -7,6 +7,7 @@ import * as config from './config';
 
 import { tradeStream } from './listener/tradeListener/tradeListener';
 import { accountStream } from './listener/accountListener/accountListener';
+import { db } from './database';
 
 console.log(`*******************************************`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
@@ -25,25 +26,35 @@ app.listen(config.SERVER_PORT, () => {
   console.log(`App listening on port ${config.SERVER_PORT}!`);
 });
 
-function exitHandler(options, exitCode) {
-  if (options.cleanup) {
+async function exitHandler(evtOrExitCodeOrError: number | string | Error) {
+  console.log({ evtOrExitCodeOrError });
+  try {
     tradeStream.getConnection().close();
     accountStream.getConnection().close();
     console.log('Closed connections');
+
+    await db.saveProcessExitedDate();
+  } catch (e) {
+    console.error('EXIT HANDLER ERROR', e);
   }
-  if (exitCode || exitCode === 0) console.log(exitCode);
-  if (options.exit) process.exit();
+
+  process.exit(isNaN(+evtOrExitCodeOrError) ? 1 : +evtOrExitCodeOrError);
 }
 
-//do something when app is closing
-process.on('exit', exitHandler.bind(null, { cleanup: true, exit: true }));
-
-//catches ctrl+c event
-process.on('SIGINT', exitHandler.bind(null, { cleanup: true, exit: true }));
-
-// catches "kill pid" (for example: nodemon restart)
-process.on('SIGUSR1', exitHandler.bind(null, { cleanup: true, exit: true }));
-process.on('SIGUSR2', exitHandler.bind(null, { cleanup: true, exit: true }));
-
-//catches uncaught exceptions
-process.on('uncaughtException', exitHandler.bind(null, { cleanup: true, exit: true }));
+[
+  'beforeExit',
+  'uncaughtException',
+  'unhandledRejection',
+  'SIGHUP',
+  'SIGINT',
+  'SIGQUIT',
+  'SIGILL',
+  'SIGTRAP',
+  'SIGABRT',
+  'SIGBUS',
+  'SIGFPE',
+  'SIGUSR1',
+  'SIGSEGV',
+  'SIGUSR2',
+  'SIGTERM',
+].forEach((evt) => process.on(evt, exitHandler));

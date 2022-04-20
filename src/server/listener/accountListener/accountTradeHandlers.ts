@@ -1,6 +1,7 @@
 import { ClosePosition } from '@master-chief/alpaca';
 import { TradeUpdate } from '@master-chief/alpaca/@types/entities';
 import {
+  CustomTradeUpdate,
   IListenerExitRule,
   IListenerSimpleStopLossRule,
   IPosition,
@@ -12,7 +13,7 @@ import {
 } from '../../../shared/interfaces';
 import { db } from '../../database';
 
-export const accountTradeUpdatesHandler = async (tradeUpdate: TradeUpdate) => {
+export const accountTradeUpdatesHandler = async (tradeUpdate: TradeUpdate | CustomTradeUpdate) => {
   const { order, event } = tradeUpdate;
   const { symbol, client_order_id: clientOrderId } = order;
   const positionState = db.getAccountPosition(symbol);
@@ -45,7 +46,7 @@ export const accountTradeUpdatesHandler = async (tradeUpdate: TradeUpdate) => {
   }
 };
 
-const handleBuyOrderFilled = async (positionState: IPosition, tradeUpdate: TradeUpdate) => {
+const handleBuyOrderFilled = async (positionState: IPosition, tradeUpdate: TradeUpdate | CustomTradeUpdate) => {
   // move buy order triggers to activeListeners
   const { order, position_qty: positionQty } = tradeUpdate;
   const {
@@ -69,7 +70,7 @@ const handleBuyOrderFilled = async (positionState: IPosition, tradeUpdate: Trade
   await db.putAccountPosition(newPositionState);
 };
 
-const handleSellOrderFilled = async (positionState: IPosition, tradeUpdate: TradeUpdate) => {
+const handleSellOrderFilled = async (positionState: IPosition, tradeUpdate: TradeUpdate | CustomTradeUpdate) => {
   const { event } = tradeUpdate;
   if (event === 'partial_fill') {
     // Do we actually need to worry about this, since they will be market orders?
@@ -82,7 +83,7 @@ const handleSellOrderFilled = async (positionState: IPosition, tradeUpdate: Trad
   }
 };
 
-const handleSellOrderFill = async (positionState: IPosition, tradeUpdate: TradeUpdate) => {
+const handleSellOrderFill = async (positionState: IPosition, tradeUpdate: TradeUpdate | CustomTradeUpdate) => {
   const { inactiveListeners, symbol } = positionState;
   const { order, position_qty: positionQty } = tradeUpdate;
   const { client_order_id: savedClientOrderId } = order;
