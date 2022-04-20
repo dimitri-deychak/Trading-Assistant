@@ -93,7 +93,7 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
 
   const notionalValue = Math.floor(riskInDollars / (entryPrice - stopPrice)) * entryPrice;
 
-  const totalQuantity = notionalValue / entryPrice;
+  const totalQuantity = Math.round(notionalValue / entryPrice);
 
   const alpacaBuyOrder: PlaceOrder = {
     symbol: newSymbol,

@@ -1,4 +1,5 @@
 import { AlpacaStream, Trade } from '@master-chief/alpaca';
+import { IPosition, PositionStatus } from '../../../shared/interfaces';
 import { ALPACA_API_KEYS } from '../../config';
 import { db } from '../../database';
 import { enqueue } from '../queue';
@@ -43,6 +44,12 @@ tradeStream.on('subscription', (message) => {
 });
 
 export const updateTradePriceSubscriptionsToAccountPositions = () => {
-  const symbolsToSubscribeTo = db.getAccountPositions().map((position) => position.symbol);
+  const symbolsToSubscribeTo = db
+    .getAccountPositions()
+    .filter(onlyOpenPositionsFilter)
+    .map((position) => position.symbol);
   tradeStream.subscribe('trades', symbolsToSubscribeTo);
 };
+
+const onlyOpenPositionsFilter = (position: IPosition) =>
+  [PositionStatus.OPEN, PositionStatus.RUNNER].includes(position.status);

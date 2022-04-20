@@ -61,8 +61,6 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
     setExpanded(!expanded);
   };
 
-  console.log({ position });
-
   return (
     <Card sx={{ flex: 1, height: 'calc(100vh - 64px - 24px - 24px)', display: 'flex', flexDirection: 'column' }}>
       <CardHeader

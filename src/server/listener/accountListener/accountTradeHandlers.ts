@@ -12,6 +12,7 @@ import {
   PositionStatus,
 } from '../../../shared/interfaces';
 import { db } from '../../database';
+import { updateTradePriceSubscriptionsToAccountPositions } from '../tradeListener/tradeListener';
 
 export const accountTradeUpdatesHandler = async (tradeUpdate: TradeUpdate | CustomTradeUpdate) => {
   const { order, event } = tradeUpdate;
@@ -41,7 +42,7 @@ export const accountTradeUpdatesHandler = async (tradeUpdate: TradeUpdate | Cust
   } else {
     if (orderFillEvent) {
       console.log(JSON.stringify({ debug: { tradeUpdate, positionState, sellOrder } }));
-      throw new Error('Matching saved sell order not found for fill event - ' + symbol);
+      throw new Error('Matching saved sell order not found for fill event ^ - ' + symbol);
     }
   }
 };
@@ -68,6 +69,7 @@ const handleBuyOrderFilled = async (positionState: IPosition, tradeUpdate: Trade
   };
 
   await db.putAccountPosition(newPositionState);
+  updateTradePriceSubscriptionsToAccountPositions();
 };
 
 const handleSellOrderFilled = async (positionState: IPosition, tradeUpdate: TradeUpdate | CustomTradeUpdate) => {
