@@ -100,7 +100,7 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
     side: 'buy',
     type: 'stop_limit',
     time_in_force: 'gtc',
-    stop_price: entryPrice,
+    stop_price: Number(entryPrice.toFixed(2)),
     limit_price: Number(limitPrice.toFixed(2)),
     qty: totalQuantity,
   };

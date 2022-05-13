@@ -18,6 +18,8 @@ import { Box, Button, ListItemIcon, ListItemText, Menu, MenuItem, MenuList, Typo
 import { Account, IPosition, ListenerExitSide, PositionStatus } from '../../shared/interfaces';
 import { ListenersForm } from './TradeForm';
 import { removePosition } from '../utils/api';
+import { AlpacaClient } from '@master-chief/alpaca';
+import { TvChart } from './TvChart/TvChart';
 
 interface ExpandMoreProps extends IconButtonProps {
   expand: boolean;
@@ -37,9 +39,10 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
 type TradeDetailsCardProps = {
   position: IPosition;
   onAccountUpdated: (newAccount: Account, msg?: string) => void;
+  client: AlpacaClient;
 };
 
-export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccountUpdated }) => {
+export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccountUpdated, client }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handlePositionMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -104,15 +107,7 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
 
       <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <CardMedia sx={{ margin: '24px', width: '90%', flex: 1, overflow: 'hidden' }}>
-          {position && (
-            <TradingViewWidget
-              symbol={position.symbol}
-              autosize
-              show_bottom_toolbar={true}
-              locale='en'
-              hide_side_toolbar={false}
-            />
-          )}
+          {position && <TvChart position={position} client={client}></TvChart>}
         </CardMedia>
         <ListenersForm position={position} onAccountUpdated={onAccountUpdated} />
       </Box>

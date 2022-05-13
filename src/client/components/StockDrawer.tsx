@@ -27,6 +27,7 @@ type OwnProps = {
   runners: IPosition[];
   openTrades: IPosition[];
   queuedTrades: IPosition[];
+  closedTrades: IPosition[];
   handleDrawerClose: () => void;
   onSymbolClicked: (position: IPosition) => void;
   onAddTradeClicked: () => void;
@@ -38,6 +39,7 @@ export const StockDrawer: VFC<OwnProps> = ({
   runners,
   openTrades,
   queuedTrades,
+  closedTrades,
   handleDrawerClose,
   onSymbolClicked,
   onAddTradeClicked,
@@ -124,6 +126,23 @@ export const StockDrawer: VFC<OwnProps> = ({
           <ListItemText primary='Add trade' />
         </ListItem>
       </List>
+      <List>
+        <ListItem>
+          <Typography variant='h5' color='initial'>
+            Closed Trades
+          </Typography>
+        </ListItem>
+        {closedTrades.map((position, index) => (
+          <ListItemButton
+            key={position.symbol + index}
+            onClick={() => onSymbolClicked(position)}
+            selected={selectedPosition?.symbol === position.symbol}
+          >
+            {position.symbol}
+          </ListItemButton>
+        ))}
+      </List>
+      <Divider />
     </Drawer>
   );
 };

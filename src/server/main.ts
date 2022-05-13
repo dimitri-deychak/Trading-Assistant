@@ -32,8 +32,6 @@ async function exitHandler(evtOrExitCodeOrError: number | string | Error) {
     tradeStream.getConnection().close();
     accountStream.getConnection().close();
     console.log('Closed connections');
-
-    await db.saveProcessExitedDate();
   } catch (e) {
     console.error('EXIT HANDLER ERROR', e);
   }

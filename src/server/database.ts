@@ -52,7 +52,7 @@ class Database {
         await this.putNewAccount();
       }
 
-      console.log('Synced Account', this.account);
+      console.log('Synced Account');
     } catch (e) {
       if (e.Code === DB_ERROR.ACCOUNT_DOES_NOT_EXIST) {
         await this.putNewAccount();
@@ -75,13 +75,13 @@ class Database {
     return this.account;
   }
 
-  async saveProcessExitedDate() {
-    this.account.lastProcessExitDateTime = new Date().toISOString();
+  async saveLastTradeUpdateDate() {
+    this.account.lastTradeUpdateDate = new Date().toISOString();
     await this.putAccount(this.account);
   }
 
-  getProcessExitDate() {
-    return this.account.lastProcessExitDateTime;
+  getLastTradeUpdateDate() {
+    return this.account.lastTradeUpdateDate;
   }
 
   async removePositionFromAccountBySymbol(symbol: string) {

@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState, VFC } from 'react';
+import React, { ChangeEvent, useState, useContext, VFC, useRef, useEffect, Ref } from 'react';
 import {
   Box,
   TextField,
@@ -16,6 +16,9 @@ import {
 import { IRawTradeEntry } from '../../shared/interfaces';
 import TradingViewWidget from 'react-tradingview-widget';
 import { formatNumber } from '../../shared/utils';
+import { TvChart } from './TvChart/TvChart';
+import { ClientContext } from '../App';
+import { ISeriesApi, LineStyle, PriceLineOptions, IChartApi, IPriceLine } from 'lightweight-charts';
 
 type TradeEntryFormProps = {
   symbol: string;
@@ -115,6 +118,7 @@ type NewTradeEntryContentProps = {
   setRiskInDollars: (risk: number) => void;
   deRiskTargetMultiple: number;
   setDeRiskTargetMultiple: (multiple: number) => void;
+  onClick?: (time: string, price: number, series: IChartApi<'Candlestick'>) => void;
 };
 
 export const NewTradeEntryContent: VFC<NewTradeEntryContentProps> = ({
@@ -128,11 +132,14 @@ export const NewTradeEntryContent: VFC<NewTradeEntryContentProps> = ({
   setRiskInDollars,
   deRiskTargetMultiple,
   setDeRiskTargetMultiple,
+  onClick,
 }) => {
+  const client = useContext(ClientContext);
+
   return (
     <Box sx={{ display: 'flex', height: '100%', gap: '16px', alignItems: 'center' }}>
       <Box sx={{ flex: 3, height: '90%' }}>
-        <TradingViewWidget symbol={symbol} autosize show_bottom_toolbar={true} locale='en' hide_side_toolbar={false} />
+        <TvChart client={client} symbol={symbol} onClick={onClick} />
       </Box>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -153,6 +160,14 @@ export const NewTradeEntryContent: VFC<NewTradeEntryContentProps> = ({
   );
 };
 
+type PriceLines = {
+  entry?: IPriceLine;
+  stop?: IPriceLine;
+  t1?: IPriceLine;
+  t2?: IPriceLine;
+  t3?: IPriceLine;
+};
+
 type NewTradeModalProps = {
   onConfirm: (rawTradeEntry: IRawTradeEntry) => void;
   onCancel: () => void;
@@ -164,6 +179,97 @@ export const NewTradeModal: VFC<NewTradeModalProps> = ({ onConfirm, onCancel }) 
   const [stopPrice, setStopPrice] = useState<number>();
   const [riskInDollars, setRiskInDollars] = useState<number>();
   const [deRiskTargetMultiple, setDeRiskTargetMultiple] = useState<number>();
+  const isEntryClickRef = useRef<boolean>(true);
+  const priceSeriesRef = useRef<ISeriesApi<'Candlestick'>>();
+  const priceLines = useRef<PriceLines>({});
+
+  const onClick = (timestamp: string, price: number, priceSeries: ISeriesApi<'Candlestick'>) => {
+    priceSeriesRef.current = priceSeries;
+
+    if (price && isEntryClickRef.current === true) {
+      clearChart();
+      setEntryPrice(price);
+      setStopPrice(undefined);
+    }
+
+    if (price && isEntryClickRef.current === false) {
+      setStopPrice(price);
+    }
+
+    isEntryClickRef.current = !isEntryClickRef.current;
+  };
+
+  const clearChart = () => {
+    priceLines.current.entry && priceSeriesRef.current.removePriceLine(priceLines.current.entry);
+    priceLines.current.stop && priceSeriesRef.current.removePriceLine(priceLines.current.stop);
+    priceLines.current.t1 && priceSeriesRef.current.removePriceLine(priceLines.current.t1);
+    priceLines.current.t2 && priceSeriesRef.current.removePriceLine(priceLines.current.t2);
+    priceLines.current.t3 && priceSeriesRef.current.removePriceLine(priceLines.current.t3);
+  };
+
+  const drawRiskRewardLines = (priceSeries: ISeriesApi<'Candlestick'>, entryPrice: number, stopPrice?: number) => {
+    clearChart();
+    const line: PriceLineOptions = {
+      price: entryPrice,
+      color: '#0044ff',
+      lineWidth: 2,
+      lineStyle: LineStyle.Dashed,
+      axisLabelVisible: true,
+      lineVisible: true,
+      title: '',
+    };
+    priceLines.current.entry = priceSeries.createPriceLine(line);
+
+    if (stopPrice) {
+      const deltaBetweenEntryAndStop = Math.abs(entryPrice - stopPrice);
+
+      const stopLine: PriceLineOptions = {
+        price: stopPrice,
+        color: '#ff1100',
+        lineWidth: 2,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: true,
+        lineVisible: true,
+        title: '',
+      };
+
+      const targetR1Line: PriceLineOptions = {
+        price: entryPrice + deltaBetweenEntryAndStop * 1,
+        color: '#009688',
+        lineWidth: 2,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: true,
+        lineVisible: true,
+        title: '',
+      };
+      const targetR2Line: PriceLineOptions = {
+        price: entryPrice + deltaBetweenEntryAndStop * 2,
+        color: '#009688',
+        lineWidth: 2,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: true,
+        lineVisible: true,
+        title: '',
+      };
+      const targetR3Line: PriceLineOptions = {
+        price: entryPrice + deltaBetweenEntryAndStop * 3,
+        color: '#009688',
+        lineWidth: 2,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: true,
+        lineVisible: true,
+        title: '',
+      };
+      priceLines.current.stop = priceSeries.createPriceLine(stopLine);
+      priceLines.current.t1 = priceSeries.createPriceLine(targetR1Line);
+      priceLines.current.t2 = priceSeries.createPriceLine(targetR2Line);
+      priceLines.current.t3 = priceSeries.createPriceLine(targetR3Line);
+    }
+  };
+
+  useEffect(() => {
+    priceSeriesRef.current && drawRiskRewardLines(priceSeriesRef.current, entryPrice, stopPrice);
+  }, [entryPrice, stopPrice, priceSeriesRef]);
 
   const allFieldsEntered =
     newSymbol && entryPrice && stopPrice && deRiskTargetMultiple && riskInDollars && entryPrice > stopPrice;
@@ -193,6 +299,7 @@ export const NewTradeModal: VFC<NewTradeModalProps> = ({ onConfirm, onCancel }) 
           setDeRiskTargetMultiple={setDeRiskTargetMultiple}
           riskInDollars={riskInDollars}
           setRiskInDollars={setRiskInDollars}
+          onClick={onClick}
         />
       </DialogContent>
       <DialogActions sx={{ display: 'flex' }}>

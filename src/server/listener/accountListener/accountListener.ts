@@ -28,6 +28,8 @@ accountStream.on('trade_updates', async (tradeUpdate: TradeUpdate) => {
       console.log(`Begin trade update handler for ${tradeUpdate.order.symbol}`);
       console.log({ tradeUpdate });
       await accountTradeUpdatesHandler(tradeUpdate);
+      await db.saveLastTradeUpdateDate();
+
       console.log(`End trade update handler for ${tradeUpdate.order.symbol}`);
     } catch (e) {
       console.error(e);

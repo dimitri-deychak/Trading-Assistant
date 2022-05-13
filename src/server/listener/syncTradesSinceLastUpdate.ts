@@ -4,31 +4,50 @@ import { db } from '../database';
 import { alpacaClient } from '../alpacaClient';
 import { Account, CustomTradeUpdate, PositionStatus } from '../../shared/interfaces';
 
+enum BACKFILL_ERRORS {
+  GET_ORDER_ERROR = 'GET_ORDER_ERROR',
+  GET_POSITION_ERROR = 'GET_POSITION_ERROR',
+}
+
 export const syncAccountPositions = async () => {
   try {
-    await removePositionsThatExistInDbButNotInServer();
-  } catch (e) {
-    console.error('Error removing positions that exist in db but not in server', e);
-  }
+    if (!db.isInitialized()) {
+      await db.init();
+    }
+    const dateOfLastUpdate = db.getLastTradeUpdateDate();
+    if (!dateOfLastUpdate) {
+      console.log('No date of last trade update, can not sync');
+      return 0;
+    }
+    console.log('TIME NOW: ', new Date().toISOString());
+    console.log('BEGINNING BACKFILL FOR WHEN SERVER WAS OFFLINE GOING BACK TO: ', dateOfLastUpdate);
 
-  try {
-    const dateWhenServerClosed = db.getProcessExitDate();
     const accountFillUpdates: Activity[] = await alpacaClient.getAccountActivities({
       activity_type: 'FILL',
-      after: dateWhenServerClosed,
+      after: dateOfLastUpdate,
     });
+    await db.saveLastTradeUpdateDate(); // going to re run this until no more updates
+
+    console.log(accountFillUpdates.length + ' number of orders to process since last update');
 
     for (const accountFillUpdate of accountFillUpdates as TradeActivity[]) {
       try {
         console.log({ accountFillUpdate });
-        const order = await alpacaClient.getOrder({ order_id: accountFillUpdate.order_id });
-        if (!order) {
-          throw new Error('No corresponding order on server for hydration');
+        let order;
+        let position;
+
+        try {
+          order = await alpacaClient.getOrder({ order_id: accountFillUpdate.order_id });
+        } catch (e) {
+          throw BACKFILL_ERRORS.GET_ORDER_ERROR;
         }
-        const position = await alpacaClient.getPosition({ symbol: accountFillUpdate.symbol });
-        if (!position) {
-          throw new Error('No corresponding position on server for hydration');
+
+        try {
+          position = await alpacaClient.getPosition({ symbol: accountFillUpdate.symbol });
+        } catch (e) {
+          throw BACKFILL_ERRORS.GET_POSITION_ERROR;
         }
+
         const tradeActivity = {
           ...accountFillUpdate,
           event: accountFillUpdate.type,
@@ -38,15 +57,20 @@ export const syncAccountPositions = async () => {
         } as CustomTradeUpdate;
         await accountTradeUpdatesHandler(tradeActivity);
       } catch (e) {
-        console.error('Error for specific account activity', e);
+        if (e === BACKFILL_ERRORS.GET_ORDER_ERROR || e === BACKFILL_ERRORS.GET_POSITION_ERROR) {
+          console.log('known backfill error, ', e, accountFillUpdate);
+        } else {
+          console.log('unknown error processing backfills', e);
+        }
       }
     }
+    return accountFillUpdates.length;
   } catch (e) {
     console.error('error syncing account', e);
   }
 };
 
-const removePositionsThatExistInDbButNotInServer = async () => {
+export const removePositionsThatExistInDbButNotInServer = async () => {
   if (!db.isInitialized()) {
     await db.init();
   }
@@ -55,7 +79,9 @@ const removePositionsThatExistInDbButNotInServer = async () => {
 
   const dbPositions = db.getAccountPositions();
   const serverPositions = await alpacaClient.getPositions();
+  console.log({ serverPositions });
   const orders = await alpacaClient.getOrders({ status: 'open' });
+  console.log({ orders });
 
   const newDbPositions = [];
 

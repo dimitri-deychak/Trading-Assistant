@@ -1,10 +1,11 @@
-import { AlpacaClient, GetBars, PageOfBars, Bar } from "@master-chief/alpaca";
+import { AlpacaClient, GetBars, PageOfBars, Bar } from '@master-chief/alpaca';
 
 export async function getTradeBars(
   client: AlpacaClient,
   symbol: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  timeframe: string,
 ) {
   const data = {
     bars: [] as Bar[],
@@ -16,7 +17,7 @@ export async function getTradeBars(
       symbol,
       start: startDate,
       end: endDate,
-      timeframe: "1Day",
+      timeframe,
     } as GetBars;
 
     if (data.next_page_token) {

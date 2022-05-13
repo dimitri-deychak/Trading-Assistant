@@ -17,6 +17,7 @@ import { updateTradePriceSubscriptionsToAccountPositions } from '../tradeListene
 export const accountTradeUpdatesHandler = async (tradeUpdate: TradeUpdate | CustomTradeUpdate) => {
   const { order, event } = tradeUpdate;
   const { symbol, client_order_id: clientOrderId } = order;
+
   const positionState = db.getAccountPosition(symbol);
   if (!positionState) {
     throw new Error('Getting trade updates for untracked position - ' + symbol);
@@ -104,6 +105,7 @@ const handleSellOrderFill = async (positionState: IPosition, tradeUpdate: TradeU
 
   // Keep in place attribute update
   filledListener.order = order;
+  positionState.positionQty = positionQty;
   // Update db with order state
   await db.putAccountPosition(positionState);
 
@@ -114,6 +116,9 @@ const handleSellOrderFill = async (positionState: IPosition, tradeUpdate: TradeU
       await handleBreakEvenOnRest(positionState);
     }
   } else {
+    positionState.inactiveListeners = [...positionState.inactiveListeners, ...positionState.activeListeners];
+    positionState.activeListeners = [];
+    positionState.status = PositionStatus.CLOSED;
     // move position to closed position
     const { positions, closedPositions, ...account } = db.getAccount();
     const newPositions = positions.filter((position) => position.symbol !== symbol);
@@ -160,11 +165,7 @@ const handleBreakEvenOnRest = async (positionState: IPosition) => {
 
   const { proceedsSoFar, costBasisSoFar } = breakEvenCounters;
 
-  console.log({ breakEvenCounters });
-
   const profitSoFar = Math.max(0, proceedsSoFar - costBasisSoFar);
-
-  console.log({ profitSoFar });
 
   if (profitSoFar === 0) {
     throw new Error(`Trying to set stops to break even on ${symbol} but does not have any profit yet.`);

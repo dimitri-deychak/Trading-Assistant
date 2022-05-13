@@ -20,7 +20,7 @@ export interface CustomTradeUpdate extends TradeActivity {
 export interface Account {
   positions: IPosition[];
   closedPositions: IPosition[];
-  lastProcessExitDateTime: string;
+  lastTradeUpdateDate: string;
 }
 
 export interface IRawTradeEntry {

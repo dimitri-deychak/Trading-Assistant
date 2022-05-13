@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { createContext, useEffect, useMemo, useState } from 'react';
 import { StockDrawer } from './components/StockDrawer';
 
 import Box from '@mui/material/Box';
@@ -17,9 +17,11 @@ import { TradeDetailsCard } from './components/TradeDetailsCard';
 import { Account, IPosition, IRawTradeEntry, PositionStatus } from '../shared/interfaces';
 
 import { IEnv } from '../shared/interfaces';
-import { clearState, getAccount, getEnv, submitNewPosition } from './utils/api';
+import { clearState, getAccount, getAlpacaClient, getEnv, submitNewPosition } from './utils/api';
 import Dialog from '@mui/material/Dialog';
 import { Button, DialogContent, DialogTitle, Snackbar } from '@mui/material';
+
+export const ClientContext = createContext(null);
 
 export const App = () => {
   const [selectedPosition, setSelectedPosition] = useState<IPosition>();
@@ -38,6 +40,12 @@ export const App = () => {
 
     getAccountData();
   }, []);
+
+  const alpacaClient = useMemo(() => {
+    if (env) {
+      return getAlpacaClient(env);
+    }
+  }, [env]);
 
   const [drawerOpen, setDrawerOpen] = useState(true);
 
@@ -84,6 +92,8 @@ export const App = () => {
         : [],
     [account],
   );
+
+  const closedTrades = useMemo(() => (account && account.positions ? account.closedPositions : []), [account]);
 
   const onConfirmAlpacaOrder = async (rawTradeEntry: IRawTradeEntry) => {
     const { newSymbol } = rawTradeEntry;
@@ -132,71 +142,81 @@ export const App = () => {
   };
 
   return (
-    <Box sx={{ display: 'flex' }} className='app'>
-      <CssBaseline />
-      <AppBar position='fixed' open={drawerOpen}>
-        <Toolbar
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Box>
-            <IconButton
-              color='inherit'
-              aria-label='open drawer'
-              onClick={handleDrawerOpen}
-              edge='start'
-              sx={{ mr: 2, ...(drawerOpen && { display: 'none' }) }}
-            >
-              <MenuIcon />
+    <ClientContext.Provider value={alpacaClient}>
+      <Box sx={{ display: 'flex' }} className='app'>
+        <CssBaseline />
+        <AppBar position='fixed' open={drawerOpen}>
+          <Toolbar
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Box>
+              <IconButton
+                color='inherit'
+                aria-label='open drawer'
+                onClick={handleDrawerOpen}
+                edge='start'
+                sx={{ mr: 2, ...(drawerOpen && { display: 'none' }) }}
+              >
+                <MenuIcon />
+              </IconButton>
+            </Box>
+
+            <Box>
+              <Typography variant='h6' noWrap component='div' sx={{ flex: 1, width: '100%' }}>
+                Trading Assistant
+              </Typography>
+            </Box>
+            <Box>
+              <IconButton color='inherit' onClick={() => setIsAccountModalOpen(true)} edge='end'>
+                <HomeIcon />
+              </IconButton>
+            </Box>
+          </Toolbar>
+        </AppBar>
+
+        <Dialog open={isAccountModalOpen}>
+          <DialogTitle>
+            Account options
+            <IconButton aria-label='close' onClick={() => setIsAccountModalOpen(false)}>
+              <CloseIcon />
             </IconButton>
-          </Box>
+          </DialogTitle>
+          <DialogContent>
+            <Button onClick={devClearOrders}> DEV: CLEAR STATE </Button>
+          </DialogContent>
+        </Dialog>
 
-          <Box>
-            <Typography variant='h6' noWrap component='div' sx={{ flex: 1, width: '100%' }}>
-              Trading Assistant
-            </Typography>
-          </Box>
-          <Box>
-            <IconButton color='inherit' onClick={() => setIsAccountModalOpen(true)} edge='end'>
-              <HomeIcon />
-            </IconButton>
-          </Box>
-        </Toolbar>
-      </AppBar>
+        <Snackbar
+          open={isSnackbarOpen}
+          autoHideDuration={6000}
+          onClose={handleSnackbarClose}
+          message={snackbarMessage}
+        />
 
-      <Dialog open={isAccountModalOpen}>
-        <DialogTitle>
-          Account options
-          <IconButton aria-label='close' onClick={() => setIsAccountModalOpen(false)}>
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <Button onClick={devClearOrders}> DEV: CLEAR STATE </Button>
-        </DialogContent>
-      </Dialog>
+        {newTradeModalOpen && <NewTradeModal onCancel={onAddTradeDialogCancel} onConfirm={onConfirmAlpacaOrder} />}
 
-      <Snackbar open={isSnackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose} message={snackbarMessage} />
+        <StockDrawer
+          open={drawerOpen}
+          runners={runners}
+          openTrades={openTrades}
+          queuedTrades={queuedTrades}
+          closedTrades={closedTrades}
+          handleDrawerClose={handleDrawerClose}
+          onSymbolClicked={onSymbolClicked}
+          onAddTradeClicked={onAddTradeClicked}
+          selectedPosition={selectedPosition}
+        ></StockDrawer>
 
-      {newTradeModalOpen && <NewTradeModal onCancel={onAddTradeDialogCancel} onConfirm={onConfirmAlpacaOrder} />}
-
-      <StockDrawer
-        open={drawerOpen}
-        runners={runners}
-        openTrades={openTrades}
-        queuedTrades={queuedTrades}
-        handleDrawerClose={handleDrawerClose}
-        onSymbolClicked={onSymbolClicked}
-        onAddTradeClicked={onAddTradeClicked}
-        selectedPosition={selectedPosition}
-      ></StockDrawer>
-
-      <Main open={drawerOpen}>
-        <DrawerHeader />
-        {selectedPosition && <TradeDetailsCard position={selectedPosition} onAccountUpdated={onAccountUpdated} />}
-      </Main>
-    </Box>
+        <Main open={drawerOpen}>
+          <DrawerHeader />
+          {selectedPosition && (
+            <TradeDetailsCard position={selectedPosition} onAccountUpdated={onAccountUpdated} client={alpacaClient} />
+          )}
+        </Main>
+      </Box>
+    </ClientContext.Provider>
   );
 };

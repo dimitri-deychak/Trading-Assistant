@@ -8,7 +8,7 @@ import {
   getLastTradeHandler,
   newPositionHandler,
   updatePositionHandler,
-} from './routeCallbacks';
+} from './route-callbacks';
 
 export function apiRouter() {
   const router = Router();

@@ -27,7 +27,7 @@ tradeStream.once('authenticated', async () => {
 tradeStream.on('trade', async (trade: Trade) => {
   enqueue(async () => {
     try {
-      console.log(`Begin Handler for ${trade.S}`);
+      console.log(`Begin Handler for ${trade.S}. Price: ${trade.p}`);
       await latestPriceHandler(trade);
       console.log(`End Handler for ${trade.S}`);
     } catch (e) {
