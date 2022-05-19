@@ -1,80 +1,72 @@
 import { Activity, TradeActivity } from '@master-chief/alpaca';
-import { accountTradeUpdatesHandler } from './accountListener/accountTradeHandlers';
 import { db } from '../database';
 import { alpacaClient } from '../alpacaClient';
 import { Account, CustomTradeUpdate, PositionStatus } from '../../shared/interfaces';
 
-enum BACKFILL_ERRORS {
-  GET_ORDER_ERROR = 'GET_ORDER_ERROR',
-  GET_POSITION_ERROR = 'GET_POSITION_ERROR',
-}
+// enum BACKFILL_ERRORS {
+//   GET_ORDER_ERROR = 'GET_ORDER_ERROR',
+//   GET_POSITION_ERROR = 'GET_POSITION_ERROR',
+// }
 
-export const syncAccountPositions = async () => {
-  try {
-    if (!db.isInitialized()) {
-      await db.init();
-    }
-    const dateOfLastUpdate = db.getLastTradeUpdateDate();
-    if (!dateOfLastUpdate) {
-      console.log('No date of last trade update, can not sync');
-      return 0;
-    }
-    console.log('TIME NOW: ', new Date().toISOString());
-    console.log('BEGINNING BACKFILL FOR WHEN SERVER WAS OFFLINE GOING BACK TO: ', dateOfLastUpdate);
+// export const syncAccountPositions = async () => {
+//   try {
+//     const dateOfLastUpdate = db.getLastTradeUpdateDate();
+//     if (!dateOfLastUpdate) {
+//       console.log('No date of last trade update, can not sync');
+//       return 0;
+//     }
+//     console.log('TIME NOW: ', new Date().toISOString());
+//     console.log('BEGINNING BACKFILL FOR WHEN SERVER WAS OFFLINE GOING BACK TO: ', dateOfLastUpdate);
 
-    const accountFillUpdates: Activity[] = await alpacaClient.getAccountActivities({
-      activity_type: 'FILL',
-      after: dateOfLastUpdate,
-    });
-    await db.saveLastTradeUpdateDate(); // going to re run this until no more updates
+//     const accountFillUpdates: Activity[] = await alpacaClient.getAccountActivities({
+//       activity_type: 'FILL',
+//       after: dateOfLastUpdate,
+//     });
+//     await db.saveLastTradeUpdateDate(); // going to re run this until no more updates
 
-    console.log(accountFillUpdates.length + ' number of orders to process since last update');
+//     console.log(accountFillUpdates.length + ' number of orders to process since last update');
 
-    for (const accountFillUpdate of accountFillUpdates as TradeActivity[]) {
-      try {
-        console.log({ accountFillUpdate });
-        let order;
-        let position;
+//     for (const accountFillUpdate of accountFillUpdates as TradeActivity[]) {
+//       try {
+//         console.log({ accountFillUpdate });
+//         let order;
+//         let position;
 
-        try {
-          order = await alpacaClient.getOrder({ order_id: accountFillUpdate.order_id });
-        } catch (e) {
-          throw BACKFILL_ERRORS.GET_ORDER_ERROR;
-        }
+//         try {
+//           order = await alpacaClient.getOrder({ order_id: accountFillUpdate.order_id });
+//         } catch (e) {
+//           throw BACKFILL_ERRORS.GET_ORDER_ERROR;
+//         }
 
-        try {
-          position = await alpacaClient.getPosition({ symbol: accountFillUpdate.symbol });
-        } catch (e) {
-          throw BACKFILL_ERRORS.GET_POSITION_ERROR;
-        }
+//         try {
+//           position = await alpacaClient.getPosition({ symbol: accountFillUpdate.symbol });
+//         } catch (e) {
+//           throw BACKFILL_ERRORS.GET_POSITION_ERROR;
+//         }
 
-        const tradeActivity = {
-          ...accountFillUpdate,
-          event: accountFillUpdate.type,
-          order,
-          position_qty: position.qty,
-          execution_id: accountFillUpdate.id,
-        } as CustomTradeUpdate;
-        await accountTradeUpdatesHandler(tradeActivity);
-      } catch (e) {
-        if (e === BACKFILL_ERRORS.GET_ORDER_ERROR || e === BACKFILL_ERRORS.GET_POSITION_ERROR) {
-          console.log('known backfill error, ', e, accountFillUpdate);
-        } else {
-          console.log('unknown error processing backfills', e);
-        }
-      }
-    }
-    return accountFillUpdates.length;
-  } catch (e) {
-    console.error('error syncing account', e);
-  }
-};
+//         const tradeActivity = {
+//           ...accountFillUpdate,
+//           event: accountFillUpdate.type,
+//           order,
+//           position_qty: position.qty,
+//           execution_id: accountFillUpdate.id,
+//         } as CustomTradeUpdate;
+//         await accountTradeUpdatesHandler(tradeActivity);
+//       } catch (e) {
+//         if (e === BACKFILL_ERRORS.GET_ORDER_ERROR || e === BACKFILL_ERRORS.GET_POSITION_ERROR) {
+//           console.log('known backfill error, ', e, accountFillUpdate);
+//         } else {
+//           console.log('unknown error processing backfills', e);
+//         }
+//       }
+//     }
+//     return accountFillUpdates.length;
+//   } catch (e) {
+//     console.error('error syncing account', e);
+//   }
+// };
 
 export const removePositionsThatExistInDbButNotInServer = async () => {
-  if (!db.isInitialized()) {
-    await db.init();
-  }
-
   console.log('Checking for stale positions...');
 
   const dbPositions = db.getAccountPositions();

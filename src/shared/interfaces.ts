@@ -1,4 +1,4 @@
-import { ClosePosition, Order, PlaceOrder, TradeActivity } from '@master-chief/alpaca';
+import { Activity, ClosePosition, Order, PlaceOrder, TradeActivity } from '@master-chief/alpaca';
 
 // 3 Tiers of positions
 // runners are trades that have some profit taken and stop moved to break even, so essentially risk free
@@ -21,6 +21,9 @@ export interface Account {
   positions: IPosition[];
   closedPositions: IPosition[];
   lastTradeUpdateDate: string;
+  activityRecord: {
+    [key: string]: Activity;
+  };
 }
 
 export interface IRawTradeEntry {

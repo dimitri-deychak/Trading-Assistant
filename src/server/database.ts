@@ -3,6 +3,7 @@ import { ALPACA_API_KEYS } from './config';
 
 import { S3Client } from '@aws-sdk/client-s3';
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { Activity } from '@master-chief/alpaca';
 
 process.env.AWS_ACCESS_KEY_ID = process.env.BUCKETEER_AWS_ACCESS_KEY_ID;
 process.env.AWS_SECRET_ACCESS_KEY = process.env.BUCKETEER_AWS_SECRET_ACCESS_KEY;
@@ -38,6 +39,22 @@ class Database {
     this._isInitialized = true;
   }
 
+  getAccountActivityRecord() {
+    return this.account.activityRecord;
+  }
+
+  async setAccountActivityRecord(activity: Activity) {
+    const key = activity.id;
+
+    if (!key) {
+      console.error(activity);
+      throw new Error('Account activity missing');
+    }
+
+    this.account.activityRecord[key] = activity;
+    await this.putAccount(this.account);
+  }
+
   async syncAccount() {
     try {
       const getResult = await s3Client.send(
@@ -48,14 +65,14 @@ class Database {
       const accountStateFromS3 = JSON.parse(stringifiedAccountStateFromS3 as string);
       this.account = accountStateFromS3 as Account;
 
-      if (!this.account.positions) {
-        await this.putNewAccount();
+      if (!this.account) {
+        await this.resetAccount();
       }
 
       console.log('Synced Account');
     } catch (e) {
       if (e.Code === DB_ERROR.ACCOUNT_DOES_NOT_EXIST) {
-        await this.putNewAccount();
+        await this.resetAccount();
       } else {
         console.error('S3 Account Read Error', e);
       }
@@ -131,9 +148,13 @@ class Database {
     }
   }
 
-  async putNewAccount() {
+  async resetAccount() {
     try {
-      const account = { positions: [], closedPositions: [] } as Account;
+      const account = {
+        ...this.account,
+        positions: [],
+        lastTradeUpdateDate: new Date().toISOString(),
+      } as Account;
       await s3Client.send(
         new PutObjectCommand({
           Bucket: process.env.BUCKETEER_BUCKET_NAME,
@@ -142,7 +163,7 @@ class Database {
         }),
       );
 
-      console.error('Created new account.', account);
+      console.log('Created new account.', account);
       await this.syncAccount();
     } catch (e) {
       console.error('S3 New Account Write Error', e);

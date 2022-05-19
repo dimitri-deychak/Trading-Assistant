@@ -17,11 +17,7 @@ export const tradeStream = new AlpacaStream({
 
 const testSymbols = ['SPY', 'QQQ', 'AMZN', 'NFLX', 'AAPL'];
 tradeStream.once('authenticated', async () => {
-  if (!db.isInitialized()) {
-    await db.init();
-  }
-
-  updateTradePriceSubscriptionsToAccountPositions();
+  enqueue(async () => updateTradePriceSubscriptionsToAccountPositions());
 });
 
 tradeStream.on('trade', async (trade: Trade) => {

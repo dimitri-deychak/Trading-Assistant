@@ -1,5 +1,4 @@
-import { ClosePosition } from '@master-chief/alpaca';
-import { TradeUpdate } from '@master-chief/alpaca/@types/entities';
+import { Activity, ClosePosition, TradeActivity } from '@master-chief/alpaca';
 import {
   CustomTradeUpdate,
   IListenerExitRule,
@@ -13,48 +12,58 @@ import {
 } from '../../../shared/interfaces';
 import { db } from '../../database';
 import { updateTradePriceSubscriptionsToAccountPositions } from '../tradeListener/tradeListener';
+import { alpacaClient } from '../../alpacaClient';
 
-export const accountTradeUpdatesHandler = async (tradeUpdate: TradeUpdate | CustomTradeUpdate) => {
-  const { order, event } = tradeUpdate;
-  const { symbol, client_order_id: clientOrderId } = order;
+const isTradeActivity = (activity: Activity): activity is TradeActivity => {
+  const isFillEvent = ['fill', 'partial_fill'].includes((activity as TradeActivity).type);
+  return activity.symbol && (activity as TradeActivity).order_id && isFillEvent;
+};
+
+export const accountActivityHandler = async (activity: Activity) => {
+  if (!isTradeActivity(activity)) {
+    console.log(activity);
+    throw new Error('Not handling NonTradeActivity.');
+  }
+
+  const { symbol, order_id: orderId, type: activityType } = activity;
+  const isFillEvent = ['fill', 'partial_fill'].includes(activityType);
 
   const positionState = db.getAccountPosition(symbol);
   if (!positionState) {
     throw new Error('Getting trade updates for untracked position - ' + symbol);
   }
 
-  if (!clientOrderId) {
+  if (!orderId) {
     throw new Error('Missing Client Order Id in position - ' + symbol);
   }
 
-  const isBuyOrder = clientOrderId === positionState.entryRule.buyOrder.client_order_id;
-  const orderFillEvent = ['fill', 'partial_fill'].includes(event);
-  if (isBuyOrder && orderFillEvent) {
-    await handleBuyOrderFilled(positionState, tradeUpdate);
+  const isBuyOrder = orderId === positionState.entryRule.buyOrder.id;
+  if (isBuyOrder) {
+    await handleBuyOrderFilled(positionState, activity);
     return;
   }
 
-  const sellOrder = positionState.inactiveListeners.find(
-    (inactiveListener) => inactiveListener.order?.client_order_id === clientOrderId,
-  );
+  const sellOrder = positionState.inactiveListeners.find((inactiveListener) => inactiveListener.order?.id === orderId);
+  if (sellOrder) {
+    await handleSellOrderFilled(positionState, activity);
+    return;
+  }
 
-  if (sellOrder && orderFillEvent) {
-    await handleSellOrderFilled(positionState, tradeUpdate);
-  } else {
-    if (orderFillEvent) {
-      console.log(JSON.stringify({ debug: { tradeUpdate, positionState, sellOrder } }));
-      throw new Error('Matching saved sell order not found for fill event ^ - ' + symbol);
-    }
+  if (isFillEvent) {
+    console.log(JSON.stringify({ debug: { activity, positionState, sellOrder } }));
+    throw new Error('Matching saved sell order not found for fill event ^ - ' + symbol);
   }
 };
 
-const handleBuyOrderFilled = async (positionState: IPosition, tradeUpdate: TradeUpdate | CustomTradeUpdate) => {
+const handleBuyOrderFilled = async (positionState: IPosition, activity: TradeActivity) => {
   // move buy order triggers to activeListeners
-  const { order, position_qty: positionQty } = tradeUpdate;
+  const { order_id, cum_qty: positionQty } = activity;
   const {
     entryRule: { listenersToActivate, ...entryRule },
     activeListeners,
   } = positionState;
+
+  const order = await alpacaClient.getOrder({ order_id });
 
   const newEntryRule = {
     ...entryRule,
@@ -76,35 +85,32 @@ const handleBuyOrderFilled = async (positionState: IPosition, tradeUpdate: Trade
   updateTradePriceSubscriptionsToAccountPositions();
 };
 
-const handleSellOrderFilled = async (positionState: IPosition, tradeUpdate: TradeUpdate | CustomTradeUpdate) => {
-  const { event } = tradeUpdate;
-  if (event === 'partial_fill') {
+const handleSellOrderFilled = async (positionState: IPosition, activity: TradeActivity) => {
+  const { type } = activity;
+  if (type === 'partial_fill') {
     // Do we actually need to worry about this, since they will be market orders?
     // await handlePartialSellOrderFill(positionState, tradeUpdate);
-  } else if (event === 'fill') {
-    await handleSellOrderFill(positionState, tradeUpdate);
+  } else if (type === 'fill') {
+    await handleSellOrderFill(positionState, activity);
   } else {
     const { symbol } = positionState;
-    console.error(`Untracked sell event ${event} occurring for ${symbol}`);
+    console.error(`Untracked sell event type ${type} occurring for ${symbol}`);
   }
 };
 
-const handleSellOrderFill = async (positionState: IPosition, tradeUpdate: TradeUpdate | CustomTradeUpdate) => {
+const handleSellOrderFill = async (positionState: IPosition, activity: TradeActivity) => {
   const { inactiveListeners, symbol } = positionState;
-  const { order, position_qty: positionQty } = tradeUpdate;
-  const { client_order_id: savedClientOrderId } = order;
+  const { order_id, cum_qty: positionQty } = activity;
 
-  let filledListener = inactiveListeners.find(
-    (inactiveListener) => inactiveListener?.order?.client_order_id === savedClientOrderId,
-  );
+  const filledListener = inactiveListeners.find((inactiveListener) => inactiveListener?.order?.id === order_id);
   if (!filledListener) {
     throw new Error(
-      `Sell fill occurred without a matching order in activeListeners for ${symbol}. Order id ${savedClientOrderId}`,
+      `Sell fill occurred without a matching order in activeListeners for ${symbol}. Order id ${order_id}`,
     );
   }
 
   // Keep in place attribute update
-  filledListener.order = order;
+  filledListener.order = await alpacaClient.getOrder({ order_id });
   positionState.positionQty = positionQty;
   // Update db with order state
   await db.putAccountPosition(positionState);

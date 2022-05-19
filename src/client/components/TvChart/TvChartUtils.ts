@@ -101,7 +101,7 @@ const addMarkersToSeries = (series: ISeriesApi<'Candlestick'>, position: IPositi
       price: stop_price,
       color: '#0044ff',
       lineWidth,
-      lineStyle: LineStyle.Dashed,
+      lineStyle: LineStyle.LargeDashed,
       axisLabelVisible: true,
       //   title: 'Entry',
     };
@@ -110,7 +110,7 @@ const addMarkersToSeries = (series: ISeriesApi<'Candlestick'>, position: IPositi
       price: limit_price,
       color: '#0044ff',
       lineWidth,
-      lineStyle: LineStyle.Dashed,
+      lineStyle: LineStyle.LargeDashed,
       axisLabelVisible: true,
       //   title: 'Limit',
     };
@@ -143,7 +143,7 @@ const addMarkersToSeries = (series: ISeriesApi<'Candlestick'>, position: IPositi
       price: activeListener.triggerValue,
       color: isStopOrder ? '#ff1100' : '#009688',
       lineWidth,
-      lineStyle: LineStyle.Dashed,
+      lineStyle: LineStyle.LargeDashed,
       axisLabelVisible: true,
       //   title: isStopOrder ? 'Stop' : 'Take Profit',
     };
@@ -158,7 +158,7 @@ const addMarkersToSeries = (series: ISeriesApi<'Candlestick'>, position: IPositi
       price: listenerToActivate.triggerValue,
       color: isStopOrder ? '#ff1100' : '#009688',
       lineWidth,
-      lineStyle: LineStyle.Dashed,
+      lineStyle: LineStyle.LargeDashed,
       axisLabelVisible: true,
       //   title: isStopOrder ? 'Stop' : 'Take Profit',
     };

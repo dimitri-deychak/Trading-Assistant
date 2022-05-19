@@ -65,10 +65,6 @@ export const updatePositionHandler = async (req: Request, res: Response) => {
 
 export const getAccountHandler = async (_: Request, res: Response) => {
   try {
-    if (!db.isInitialized()) {
-      await db.init();
-    }
-
     const account = db.getAccount();
     res.send(account);
   } catch (e) {
@@ -150,7 +146,7 @@ export const clearStateHandler = async (_: Request, res: Response) => {
   enqueue(async () => {
     try {
       await alpacaClient.closePositions({ cancel_orders: true });
-      await db.putNewAccount();
+      await db.resetAccount();
       const newAccount = db.getAccount();
       res.send({ newAccount });
     } catch (e) {

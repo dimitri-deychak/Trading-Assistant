@@ -6,8 +6,6 @@ import { staticsRouter } from './routes/statics-router';
 import * as config from './config';
 
 import { tradeStream } from './listener/tradeListener/tradeListener';
-import { accountStream } from './listener/accountListener/accountListener';
-import { db } from './database';
 
 console.log(`*******************************************`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
@@ -30,7 +28,6 @@ async function exitHandler(evtOrExitCodeOrError: number | string | Error) {
   console.log({ evtOrExitCodeOrError });
   try {
     tradeStream.getConnection().close();
-    accountStream.getConnection().close();
     console.log('Closed connections');
   } catch (e) {
     console.error('EXIT HANDLER ERROR', e);
