@@ -20,8 +20,9 @@ const isTradeActivity = (activity: Activity): activity is TradeActivity => {
 };
 
 export const accountActivityHandler = async (activity: Activity) => {
+  console.log('account activity handler', { activity });
+
   if (!isTradeActivity(activity)) {
-    console.log(activity);
     throw new Error('Not handling NonTradeActivity.');
   }
 
@@ -100,7 +101,7 @@ const handleSellOrderFilled = async (positionState: IPosition, activity: TradeAc
 
 const handleSellOrderFill = async (positionState: IPosition, activity: TradeActivity) => {
   const { inactiveListeners, symbol } = positionState;
-  const { order_id, cum_qty: positionQty } = activity;
+  const { order_id, leaves_qty: positionQty } = activity;
 
   const filledListener = inactiveListeners.find((inactiveListener) => inactiveListener?.order?.id === order_id);
   if (!filledListener) {
