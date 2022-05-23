@@ -66,17 +66,6 @@ export const EntryForm: VFC<TradeEntryFormProps> = ({
           <FormControl>
             <TextField variant='standard' label='Symbol' value={symbol} onChange={onSymbolTextFieldChange} />
           </FormControl>
-          {symbol && (
-            <FormControl>
-              <TextField
-                variant='standard'
-                label='Entry price'
-                type='number'
-                value={formatNumber(entryPrice, false)}
-                onChange={onEntryPriceTextFieldChange}
-              />
-            </FormControl>
-          )}
           <FormControl>
             <TextField
               variant='standard'

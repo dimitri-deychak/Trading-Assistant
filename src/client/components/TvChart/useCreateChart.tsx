@@ -101,7 +101,7 @@ export const generateLegendText = (priceBar: CustomBar) => {
     let base = `Open: ${open} - High: ${high} - Low: ${low} - Close: ${close} - Volume: ${formattedVolume}`;
 
     if (fiftySMA) {
-      base += ` SMA(50): ${fiftySMA} `;
+      base += ` - SMA(50): ${fiftySMA} `;
     }
 
     return base;

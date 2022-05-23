@@ -1,4 +1,4 @@
-import React, { VFC, useState } from 'react';
+import React, { VFC, useState, useEffect } from 'react';
 
 import { styled } from '@mui/material/styles';
 import Card from '@mui/material/Card';
@@ -13,7 +13,6 @@ import IconButton, { IconButtonProps } from '@mui/material/IconButton';
 import { red } from '@mui/material/colors';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import TradingViewWidget from 'react-tradingview-widget';
 import { Box, Button, ListItemIcon, ListItemText, Menu, MenuItem, MenuList, Typography } from '@mui/material';
 import { Account, IPosition, ListenerExitSide, PositionStatus } from '../../shared/interfaces';
 import { ListenersForm } from './TradeForm';
@@ -23,6 +22,7 @@ import { TvChart } from './TvChart/TvChart';
 import { useWindowSize } from '../utils/windowSize';
 import { drawerWidth } from './styledAppComponents';
 import { StockMeta } from './StockMeta';
+import { useStockMeta } from '../utils/useStockMeta';
 
 interface ExpandMoreProps extends IconButtonProps {
   expand: boolean;
@@ -74,7 +74,12 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
   const tvChartHeight = totalCardHeight - 250;
   const tvChartWidth = totalCardWidth - 24;
 
-  const subHeader = <StockMeta symbol={position.symbol} />;
+  const [stockMeta, setStockMeta] = useState({} as any);
+
+  useEffect(() => {
+    useStockMeta(position.symbol, setStockMeta);
+  }, [position.symbol]);
+
   return (
     <Card
       sx={{
@@ -89,13 +94,11 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
       <CardHeader
         avatar={
           <Avatar sx={{ bgcolor: red[500] }} aria-label='recipe'>
-            S
+            {position.symbol}
           </Avatar>
         }
         action={
           <>
-            <StockMeta symbol={position.symbol} />
-
             <IconButton
               id='basic-button'
               aria-controls={open ? 'basic-menu' : undefined}
@@ -123,8 +126,8 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
             </Menu>
           </>
         }
-        title={position.symbol}
-        subheader={subHeader}
+        title={stockMeta?.name || position.symbol}
+        subheader={`Industry: ${stockMeta?.finnhubIndustry}`}
       />
 
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
