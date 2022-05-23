@@ -20,6 +20,9 @@ import { ListenersForm } from './TradeForm';
 import { removePosition } from '../utils/api';
 import { AlpacaClient } from '@master-chief/alpaca';
 import { TvChart } from './TvChart/TvChart';
+import { useWindowSize } from '../utils/windowSize';
+import { drawerWidth } from './styledAppComponents';
+import { StockMeta } from './StockMeta';
 
 interface ExpandMoreProps extends IconButtonProps {
   expand: boolean;
@@ -64,8 +67,25 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
     setExpanded(!expanded);
   };
 
+  const { height, width } = useWindowSize();
+
+  const totalCardHeight = height - 64 - 24 - 24 - 8;
+  const totalCardWidth = width - drawerWidth - 48;
+  const tvChartHeight = totalCardHeight - 250;
+  const tvChartWidth = totalCardWidth - 24;
+
+  const subHeader = <StockMeta symbol={position.symbol} />;
   return (
-    <Card sx={{ flex: 1, height: 'calc(100vh - 64px - 24px - 24px)', display: 'flex', flexDirection: 'column' }}>
+    <Card
+      sx={{
+        overflowY: 'auto',
+        flex: 1,
+        height: totalCardHeight,
+        width: totalCardWidth,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <CardHeader
         avatar={
           <Avatar sx={{ bgcolor: red[500] }} aria-label='recipe'>
@@ -74,6 +94,8 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
         }
         action={
           <>
+            <StockMeta symbol={position.symbol} />
+
             <IconButton
               id='basic-button'
               aria-controls={open ? 'basic-menu' : undefined}
@@ -102,14 +124,15 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
           </>
         }
         title={position.symbol}
-        subheader='Date entered'
+        subheader={subHeader}
       />
 
-      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        <CardMedia sx={{ margin: '24px', width: '90%', flex: 1, overflow: 'hidden' }}>
-          {position && <TvChart position={position} client={client}></TvChart>}
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        <CardMedia>
+          {position && (
+            <TvChart position={position} client={client} height={tvChartHeight} width={tvChartWidth}></TvChart>
+          )}
         </CardMedia>
-        <ListenersForm position={position} onAccountUpdated={onAccountUpdated} />
       </Box>
 
       <CardActions disableSpacing>
@@ -118,7 +141,10 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
         </ExpandMore>
       </CardActions>
       <Collapse in={expanded} timeout='auto' unmountOnExit>
-        <CardContent>Trade Details Here</CardContent>
+        <CardContent>
+          {' '}
+          <ListenersForm position={position} onAccountUpdated={onAccountUpdated} />
+        </CardContent>
       </Collapse>
     </Card>
   );

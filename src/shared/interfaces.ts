@@ -1,4 +1,12 @@
-import { Activity, ClosePosition, Order, PlaceOrder, TradeActivity } from '@master-chief/alpaca';
+import { Activity, ClosePosition, Order, PlaceOrder, TradeActivity, Bar } from '@master-chief/alpaca';
+
+export interface TAReturnValue {
+  tradeBars: CustomBar[];
+  sma?: number[];
+}
+export interface CustomBar extends Bar {
+  fiftySMA?: number;
+}
 
 // 3 Tiers of positions
 // runners are trades that have some profit taken and stop moved to break even, so essentially risk free

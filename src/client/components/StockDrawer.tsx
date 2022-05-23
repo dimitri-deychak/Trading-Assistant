@@ -68,6 +68,14 @@ export const StockDrawer: VFC<OwnProps> = ({
       </DrawerHeader>
       <Divider />
       <List>
+        <ListItem button onClick={onAddTradeClicked}>
+          <ListItemIcon></ListItemIcon>
+
+          <ListItemText primary='Add trade' />
+        </ListItem>
+      </List>
+      <Divider />
+      <List>
         <ListItem>
           <Typography variant='h5' color='initial'>
             Runners
@@ -119,13 +127,6 @@ export const StockDrawer: VFC<OwnProps> = ({
         ))}
       </List>
       <Divider />
-      <List>
-        <ListItem button onClick={onAddTradeClicked}>
-          <ListItemIcon></ListItemIcon>
-
-          <ListItemText primary='Add trade' />
-        </ListItem>
-      </List>
       <List>
         <ListItem>
           <Typography variant='h5' color='initial'>

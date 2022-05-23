@@ -58,18 +58,28 @@ export const accountActivityHandler = async (activity: Activity) => {
 
 const handleBuyOrderFilled = async (positionState: IPosition, activity: TradeActivity) => {
   // move buy order triggers to activeListeners
-  const { order_id, cum_qty: positionQty } = activity;
+  const { symbol, order_id, cum_qty: positionQty } = activity;
   const {
     entryRule: { listenersToActivate, ...entryRule },
     activeListeners,
   } = positionState;
 
-  const order = await alpacaClient.getOrder({ order_id });
+  try {
+    entryRule.order = await alpacaClient.getOrder({ order_id });
+  } catch (e) {
+    console.log('Failed to retrieve filled listener order', e);
+  }
+
+  try {
+    const serverPosition = await alpacaClient.getPosition({ symbol });
+    positionState.positionQty = serverPosition.qty;
+  } catch (e) {
+    positionState.positionQty = 0;
+  }
 
   const newEntryRule = {
     ...entryRule,
     listenersToActivate: [] as IListenerExitRule[],
-    order,
   };
 
   const newActiveListeners = [...activeListeners, ...(listenersToActivate || [])];
@@ -88,10 +98,8 @@ const handleBuyOrderFilled = async (positionState: IPosition, activity: TradeAct
 
 const handleSellOrderFilled = async (positionState: IPosition, activity: TradeActivity) => {
   const { type } = activity;
-  if (type === 'partial_fill') {
-    // Do we actually need to worry about this, since they will be market orders?
-    // await handlePartialSellOrderFill(positionState, tradeUpdate);
-  } else if (type === 'fill') {
+  const isFill = ['partial_fill', 'fill'].includes(type);
+  if (isFill) {
     await handleSellOrderFill(positionState, activity);
   } else {
     const { symbol } = positionState;
@@ -100,8 +108,8 @@ const handleSellOrderFilled = async (positionState: IPosition, activity: TradeAc
 };
 
 const handleSellOrderFill = async (positionState: IPosition, activity: TradeActivity) => {
-  const { inactiveListeners, symbol } = positionState;
-  const { order_id, leaves_qty: positionQty } = activity;
+  const { inactiveListeners } = positionState;
+  const { symbol, order_id } = activity;
 
   const filledListener = inactiveListeners.find((inactiveListener) => inactiveListener?.order?.id === order_id);
   if (!filledListener) {
@@ -111,12 +119,22 @@ const handleSellOrderFill = async (positionState: IPosition, activity: TradeActi
   }
 
   // Keep in place attribute update
-  filledListener.order = await alpacaClient.getOrder({ order_id });
-  positionState.positionQty = positionQty;
+  try {
+    filledListener.order = await alpacaClient.getOrder({ order_id });
+  } catch (e) {
+    console.log('Failed to retrieve filled listener order', e);
+  }
+
+  try {
+    const serverPosition = await alpacaClient.getPosition({ symbol });
+    positionState.positionQty = serverPosition.qty;
+  } catch (e) {
+    positionState.positionQty = 0;
+  }
   // Update db with order state
   await db.putAccountPosition(positionState);
 
-  if (positionQty > 0) {
+  if (positionState.positionQty > 0) {
     const shouldBreakEvenOnRest =
       filledListener.side === ListenerExitSide.TAKE_PROFIT && filledListener.breakEvenOnRest;
     if (shouldBreakEvenOnRest) {

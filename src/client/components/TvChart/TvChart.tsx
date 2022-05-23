@@ -1,17 +1,18 @@
 import React, { useEffect, useRef, useState, VFC } from 'react';
-import Chart from 'kaktana-react-lightweight-charts';
 import { AlpacaClient, Bar } from '@master-chief/alpaca';
-import { getTradeBars } from '../../utils/getBars';
-import { getAlpacaClient } from '../../utils/api';
+import { getAlpacaClient, getTa } from '../../utils/api';
 import { PriceScaleMode, Time, ISeriesApi } from 'lightweight-charts';
 import { createChart, ColorType } from 'lightweight-charts';
 import { addCandlestickBars, addVolumeBars } from './TvChartUtils';
 import { generateLegendText, useCreateChart } from './useCreateChart';
-import { IPosition } from '../../../shared/interfaces';
+import { CustomBar, IPosition } from '../../../shared/interfaces';
 import { Typography } from '@mui/material';
+import { getTradeBars } from '../../../shared/getBars';
 
 type TvChartProps = {
   client: AlpacaClient;
+  height: number;
+  width: number;
   position?: IPosition;
   symbol?: string;
   timeFrame?: string; //make enum
@@ -23,29 +24,36 @@ function subtractYears(numOfYears, date = new Date()) {
   return date;
 }
 
-export const TvChart: VFC<TvChartProps> = ({ client, position, symbol, timeFrame = '1Day', onClick }) => {
+export const TvChart: VFC<TvChartProps> = ({
+  client,
+  height,
+  width,
+  position,
+  symbol,
+  timeFrame = '1Day',
+  onClick,
+}) => {
   const chartContainerRef = useRef<HTMLDivElement>();
-  const [bars, setBars] = useState([] as Bar[]);
+  const [bars, setBars] = useState([] as CustomBar[]);
   const [legendText, setLegendText] = useState<string>('');
-  const now = new Date();
-  const fourYearsAgo = subtractYears(4);
   useEffect(() => {
     const _symbol = position?.symbol || symbol;
 
     const hydrateBars = async () => {
-      const newBars = await getTradeBars(client, _symbol, fourYearsAgo, now, timeFrame);
+      const { sma: newFiftySMA, tradeBars: newBars } = await getTa('SMA', _symbol, 50);
 
+      // test
       setBars(newBars);
       setLegendText(generateLegendText(newBars[newBars.length - 1]));
 
-      console.log({ newBars });
+      console.log({ newBars, newFiftySMA });
     };
 
     hydrateBars();
   }, [position, symbol, timeFrame]);
 
   useEffect(() => {
-    const { chart } = useCreateChart(chartContainerRef, bars, setLegendText, position, onClick);
+    const { chart } = useCreateChart(chartContainerRef, height, width, bars, setLegendText, position, onClick);
 
     const handleResize = () => {
       chart.applyOptions({ width: chartContainerRef?.current?.clientWidth });
@@ -58,7 +66,7 @@ export const TvChart: VFC<TvChartProps> = ({ client, position, symbol, timeFrame
 
       chart.remove();
     };
-  }, [bars]);
+  }, [bars, height]);
 
   return (
     <>

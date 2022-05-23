@@ -17,6 +17,7 @@ import { ALPACA_API_KEYS, IS_DEV } from '../config';
 import { db } from '../database';
 import { enqueue } from '../listener/queue';
 import { updateTradePriceSubscriptionsToAccountPositions } from '../listener/tradeListener/tradeListener';
+import { getTa } from '../ta/ta';
 
 export const getEnvironmentHandler = async (_: Request, res: Response) => {
   res.send({ ...ALPACA_API_KEYS, IS_DEV });
@@ -67,6 +68,19 @@ export const getAccountHandler = async (_: Request, res: Response) => {
   try {
     const account = db.getAccount();
     res.send(account);
+  } catch (e) {
+    console.error(e);
+    res.sendStatus(400);
+  }
+};
+
+export const getTaHandler = async (req: Request, res: Response) => {
+  try {
+    const symbol = String(req.query.symbol);
+    const type = String(req.query.type);
+    const length = Number(req.query.length);
+    const ta = await getTa(type, symbol, length);
+    res.send(ta);
   } catch (e) {
     console.error(e);
     res.sendStatus(400);

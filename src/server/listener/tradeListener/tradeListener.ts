@@ -4,6 +4,7 @@ import { ALPACA_API_KEYS } from '../../config';
 import { db } from '../../database';
 import { enqueue } from '../queue';
 import { latestPriceHandler } from './latestPriceHandlers';
+import { findCommonElements } from '../../../shared/utils';
 
 export const tradeStream = new AlpacaStream({
   credentials: {
@@ -20,9 +21,16 @@ tradeStream.once('authenticated', async () => {
   enqueue(async () => updateTradePriceSubscriptionsToAccountPositions());
 });
 
+const exclude_conditions = ['B', 'W', '4', '7', '9', 'C', 'G', 'H', 'I', 'M', 'N', 'P', 'Q', 'R', 'T', 'U', 'V', 'Z'];
 tradeStream.on('trade', async (trade: Trade) => {
   enqueue(async () => {
     try {
+      const excludeTrade = findCommonElements(exclude_conditions, trade.c);
+      if (excludeTrade) {
+        console.log('Excluding trade', trade);
+        return;
+      }
+
       console.log(`Begin Handler for ${trade.S}. Price: ${trade.p}`);
       await latestPriceHandler(trade);
       console.log(`End Handler for ${trade.S}`);

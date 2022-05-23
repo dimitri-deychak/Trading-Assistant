@@ -38,6 +38,11 @@ export const removePosition = async (position: IPosition) => {
   return newAccount as Account;
 };
 
+export const getTa = async (type: string, symbol: string, length: number) => {
+  const { data: ta } = await API.get(`/api/ta?symbol=${symbol}&type=${type}&length=${length}`);
+  return ta;
+};
+
 export const getAlpacaClient = (env: IEnv) => {
   const { API_KEY_ID, SECRET_KEY, IS_DEV } = env;
   return new AlpacaClient({

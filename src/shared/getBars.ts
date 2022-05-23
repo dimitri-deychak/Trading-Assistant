@@ -18,6 +18,8 @@ export async function getTradeBars(
       start: startDate,
       end: endDate,
       timeframe,
+      adjustment: 'split',
+      limit: 10000,
     } as GetBars;
 
     if (data.next_page_token) {

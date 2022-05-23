@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState, useContext, VFC, useRef, useEffect, Ref } from 'react';
+import React, { ChangeEvent, useState, useContext, VFC, useRef, useEffect, Ref, useCallback } from 'react';
 import {
   Box,
   TextField,
@@ -14,11 +14,12 @@ import {
   Typography,
 } from '@mui/material';
 import { IRawTradeEntry } from '../../shared/interfaces';
-import TradingViewWidget from 'react-tradingview-widget';
-import { formatNumber } from '../../shared/utils';
 import { TvChart } from './TvChart/TvChart';
 import { ClientContext } from '../App';
-import { ISeriesApi, LineStyle, PriceLineOptions, IChartApi, IPriceLine } from 'lightweight-charts';
+import { ISeriesApi, LineStyle, PriceLineOptions, IPriceLine } from 'lightweight-charts';
+import { useWindowSize } from '../utils/windowSize';
+import { formatNumber } from '../../shared/utils';
+import { useDebouncedEffect } from '../utils/useDebouncedEffect';
 
 type TradeEntryFormProps = {
   symbol: string;
@@ -65,6 +66,17 @@ export const EntryForm: VFC<TradeEntryFormProps> = ({
           <FormControl>
             <TextField variant='standard' label='Symbol' value={symbol} onChange={onSymbolTextFieldChange} />
           </FormControl>
+          {symbol && (
+            <FormControl>
+              <TextField
+                variant='standard'
+                label='Entry price'
+                type='number'
+                value={formatNumber(entryPrice, false)}
+                onChange={onEntryPriceTextFieldChange}
+              />
+            </FormControl>
+          )}
           <FormControl>
             <TextField
               variant='standard'
@@ -118,7 +130,7 @@ type NewTradeEntryContentProps = {
   setRiskInDollars: (risk: number) => void;
   deRiskTargetMultiple: number;
   setDeRiskTargetMultiple: (multiple: number) => void;
-  onClick?: (time: string, price: number, series: IChartApi<'Candlestick'>) => void;
+  onClick?: (time: string, price: number, series: ISeriesApi<'Candlestick'>) => void;
 };
 
 export const NewTradeEntryContent: VFC<NewTradeEntryContentProps> = ({
@@ -135,11 +147,24 @@ export const NewTradeEntryContent: VFC<NewTradeEntryContentProps> = ({
   onClick,
 }) => {
   const client = useContext(ClientContext);
+  const { height, width } = useWindowSize();
+  const chartWidth = width * (4 / 5);
+  const chartHeight = height - 200;
+  const [chartSymbol, setChartSymbol] = useState(symbol);
 
+  useDebouncedEffect(
+    () => {
+      if (symbol) {
+        setChartSymbol(symbol);
+      }
+    },
+    [symbol],
+    350,
+  );
   return (
     <Box sx={{ display: 'flex', height: '100%', gap: '16px', alignItems: 'center' }}>
-      <Box sx={{ flex: 3, height: '90%' }}>
-        <TvChart client={client} symbol={symbol} onClick={onClick} />
+      <Box sx={{ flex: 3 }}>
+        <TvChart client={client} symbol={chartSymbol} onClick={onClick} height={chartHeight} width={chartWidth} />
       </Box>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -174,11 +199,11 @@ type NewTradeModalProps = {
 };
 
 export const NewTradeModal: VFC<NewTradeModalProps> = ({ onConfirm, onCancel }) => {
-  const [newSymbol, setNewSymbol] = useState<string>();
-  const [entryPrice, setEntryPrice] = useState<number>();
-  const [stopPrice, setStopPrice] = useState<number>();
-  const [riskInDollars, setRiskInDollars] = useState<number>();
-  const [deRiskTargetMultiple, setDeRiskTargetMultiple] = useState<number>();
+  const [newSymbol, setNewSymbol] = useState<string>('');
+  const [entryPrice, setEntryPrice] = useState<number>(0);
+  const [stopPrice, setStopPrice] = useState<number>(0);
+  const [riskInDollars, setRiskInDollars] = useState<number>(100);
+  const [deRiskTargetMultiple, setDeRiskTargetMultiple] = useState<number>(1);
   const isEntryClickRef = useRef<boolean>(true);
   const priceSeriesRef = useRef<ISeriesApi<'Candlestick'>>();
   const priceLines = useRef<PriceLines>({});

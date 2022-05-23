@@ -15,7 +15,7 @@
     "jsx": "react",
     "composite": true
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "../shared/getBars.ts", "../shared/ta.ts", "utils/useDebouncedEffect.js"],
   "exclude": ["**/*.test.ts", "**/*.test.tsx"],
   "references": [{ "path": "../shared" }]
 }

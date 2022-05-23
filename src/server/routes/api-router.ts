@@ -8,6 +8,7 @@ import {
   getLastTradeHandler,
   newPositionHandler,
   updatePositionHandler,
+  getTaHandler,
 } from './route-callbacks';
 
 export function apiRouter() {
@@ -21,5 +22,6 @@ export function apiRouter() {
   router.get('/api/env', getEnvironmentHandler);
   router.get('/api/account', getAccountHandler);
   router.post('/api/remove-position', cancelAndClosePosition);
+  router.get('/api/ta', getTaHandler);
   return router;
 }

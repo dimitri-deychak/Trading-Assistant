@@ -1,7 +1,6 @@
 import { db } from '../database';
 import { fetchAccountActivities } from './accountListener/accountListener';
 import { removePositionsThatExistInDbButNotInServer } from './syncTradesSinceLastUpdate';
-
 const initialSetup = async () => {
   await db.init();
   setInterval(() => {

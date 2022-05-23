@@ -7,6 +7,8 @@ import * as config from './config';
 
 import { tradeStream } from './listener/tradeListener/tradeListener';
 
+export let stopInterval = undefined;
+
 console.log(`*******************************************`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
 console.log(`config: ${JSON.stringify(config, null, 2)}`);
@@ -28,6 +30,9 @@ async function exitHandler(evtOrExitCodeOrError: number | string | Error) {
   console.log({ evtOrExitCodeOrError });
   try {
     tradeStream.getConnection().close();
+    if (stopInterval) {
+      stopInterval();
+    }
     console.log('Closed connections');
   } catch (e) {
     console.error('EXIT HANDLER ERROR', e);

@@ -1,8 +1,22 @@
 import { Bar } from '@master-chief/alpaca';
 import { IChartApi, ISeriesApi, LineStyle } from 'lightweight-charts';
 import { Ref } from 'react';
-import { IPosition, ListenerExitSide } from '../../../shared/interfaces';
+import { CustomBar, IPosition, ListenerExitSide } from '../../../shared/interfaces';
 
+export const addFiftySma = (chart: IChartApi, bars: CustomBar[]) => {
+  const smaLine = chart.addLineSeries({
+    color: 'rgba(4, 111, 232, 1)',
+    lineWidth: 2,
+  });
+  const data = [];
+  bars.forEach((bar: CustomBar) => {
+    if (bar.fiftySMA) {
+      data.push({ time: new Date(bar.t).toLocaleString(), value: bar.fiftySMA });
+    }
+  });
+  smaLine.setData(data);
+  return smaLine;
+};
 export const addCandlestickBars = (chart: IChartApi, data: Bar[], position?: IPosition) => {
   const newSeriesOptions = {
     priceScaleId: 'right',
@@ -123,7 +137,7 @@ const addMarkersToSeries = (series: ISeriesApi<'Candlestick'>, position: IPositi
 
   for (const inactiveListener of inactiveListeners) {
     const isStopOrder = inactiveListener.side === ListenerExitSide.STOP;
-    const { filled_at, filled_avg_price, filled_qty } = inactiveListener?.order;
+    const { filled_at, filled_avg_price, filled_qty } = inactiveListener?.order || {};
 
     if (filled_at && filled_avg_price && filled_qty) {
       markers.push({
