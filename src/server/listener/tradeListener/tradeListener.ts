@@ -27,7 +27,7 @@ tradeStream.on('trade', async (trade: Trade) => {
     try {
       const excludeTrade = findCommonElements(exclude_conditions, trade.c);
       if (excludeTrade) {
-        console.log('Excluding trade', trade);
+        console.log('Excluding trade', trade.c.toString(), trade.p);
         return;
       }
 
