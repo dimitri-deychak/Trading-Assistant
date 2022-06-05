@@ -8,6 +8,13 @@ import { Activity } from '@master-chief/alpaca';
 process.env.AWS_ACCESS_KEY_ID = process.env.BUCKETEER_AWS_ACCESS_KEY_ID;
 process.env.AWS_SECRET_ACCESS_KEY = process.env.BUCKETEER_AWS_SECRET_ACCESS_KEY;
 
+const newAccount: Account = {
+  positions: [],
+  closedPositions: [],
+  lastTradeUpdateDate: '',
+  activityRecord: {}
+}
+
 const s3Client = new S3Client({
   region: process.env.BUCKETEER_AWS_REGION,
 });
@@ -132,8 +139,8 @@ class Database {
   }
 
   async putAccount(account: Account) {
-    account.positions = account.positions.filter(Boolean);
-    account.closedPositions = account.closedPositions.filter(Boolean);
+    account.positions = account.positions.filter(Boolean) ?? [];
+    account.closedPositions = account.closedPositions.filter(Boolean) ?? [];
     try {
       await s3Client.send(
         new PutObjectCommand({
@@ -152,7 +159,7 @@ class Database {
     try {
       const account = {
         ...this.account,
-        positions: [],
+        ...newAccount,
         lastTradeUpdateDate: new Date().toISOString(),
       } as Account;
       await s3Client.send(
