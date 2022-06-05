@@ -1,11 +1,33 @@
 import { Activity, ClosePosition, Order, PlaceOrder, TradeActivity, Bar } from '@master-chief/alpaca';
 
 export interface TAReturnValue {
-  tradeBars: CustomBar[];
+  tradeBars?: CustomBar[];
   sma?: number[];
+  squeeze?: {
+    hourly: {
+      hourlySqueeze?: boolean[];
+      hourlyTradeBars?: Bar[];
+      inHourlySqueezeNow: boolean;
+      hourlyEma?: number[];
+      hourlyAtr?: number[];
+      outRealUpperBand?: number[];
+      outRealLowerBand?: number[];
+    };
+  };
 }
+
 export interface CustomBar extends Bar {
   fiftySMA?: number;
+  squeeze?: boolean;
+}
+
+export interface ScanResult {
+  squeeze: any;
+  symbol: string;
+  industry: string;
+  sector: string;
+  industryGroupRs: string;
+  inHourlySqueezeNow?: boolean;
 }
 
 // 3 Tiers of positions

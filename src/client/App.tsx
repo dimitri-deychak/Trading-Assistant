@@ -14,7 +14,7 @@ import { Main, AppBar, DrawerHeader } from './components/styledAppComponents';
 import { NewTradeModal } from './components/NewTradeEntry';
 import { TradeDetailsCard } from './components/TradeDetailsCard';
 
-import { Account, IPosition, IRawTradeEntry, PositionStatus } from '../shared/interfaces';
+import { Account, IPosition, IRawTradeEntry, PositionStatus, ScanResult } from '../shared/interfaces';
 
 import { IEnv } from '../shared/interfaces';
 import { clearState, getAccount, getAlpacaClient, getEnv, submitNewPosition } from './utils/api';
@@ -25,6 +25,7 @@ export const ClientContext = createContext(null);
 
 export const App = () => {
   const [selectedPosition, setSelectedPosition] = useState<IPosition>();
+  const [selectedScanResult, setSelectedScanResult] = useState<ScanResult>();
   const [account, setAccount] = useState<Account>();
   const [env, setEnv] = useState<IEnv>();
 
@@ -61,6 +62,11 @@ export const App = () => {
     setSelectedPosition(position);
   };
 
+  const onScanResultClicked = (result: ScanResult) => {
+    setSelectedPosition(undefined);
+    setSelectedScanResult(result);
+  };
+
   const onAddTradeClicked = () => {
     setNewTradeModalOpen(true);
   };
@@ -94,6 +100,8 @@ export const App = () => {
   );
 
   const closedTrades = useMemo(() => (account && account.positions ? account.closedPositions : []), [account]);
+
+  const [scanList, setScanList] = useState<ScanResult[]>([]);
 
   const onConfirmAlpacaOrder = async (rawTradeEntry: IRawTradeEntry) => {
     const { newSymbol } = rawTradeEntry;
@@ -140,6 +148,8 @@ export const App = () => {
       setIsSnackbarOpen(true);
     }
   };
+
+  const showTradeDetailsCard = !!selectedPosition || !!selectedScanResult;
 
   return (
     <ClientContext.Provider value={alpacaClient}>
@@ -204,16 +214,25 @@ export const App = () => {
           openTrades={openTrades}
           queuedTrades={queuedTrades}
           closedTrades={closedTrades}
+          scanList={scanList}
+          setScanList={setScanList}
           handleDrawerClose={handleDrawerClose}
           onSymbolClicked={onSymbolClicked}
           onAddTradeClicked={onAddTradeClicked}
           selectedPosition={selectedPosition}
+          onScanResultClicked={onScanResultClicked}
+          selectedScanResult={selectedScanResult}
         ></StockDrawer>
 
         <Main open={drawerOpen}>
           <DrawerHeader />
-          {selectedPosition && (
-            <TradeDetailsCard position={selectedPosition} onAccountUpdated={onAccountUpdated} client={alpacaClient} />
+          {showTradeDetailsCard && (
+            <TradeDetailsCard
+              position={selectedPosition}
+              scanResult={selectedScanResult}
+              onAccountUpdated={onAccountUpdated}
+              client={alpacaClient}
+            />
           )}
         </Main>
       </Box>
