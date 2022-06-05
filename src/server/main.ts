@@ -10,6 +10,7 @@ import { clearAccountInterval, clearPriceInterval } from './listener/intervals';
 
 console.log(`*******************************************`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`ENV: ${process.env.ENV}`);
 console.log(`config: ${JSON.stringify(config, null, 2)}`);
 console.log(`*******************************************`);
 

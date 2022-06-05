@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import 'dotenv/config';
 
-const IS_DEV = process.env.NODE_ENV !== 'production';
+const IS_DEV = process.env.ENV !== 'production';
 
 const API_KEY_ID = process.env.API_KEY_ID;
 const SECRET_KEY = process.env.SECRET_KEY;
