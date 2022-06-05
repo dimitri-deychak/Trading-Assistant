@@ -1,4 +1,4 @@
-import { ClosePosition, PlaceOrder } from '@master-chief/alpaca';
+import { ClosePosition, PlaceOrder, BarsTimeframe } from '@master-chief/alpaca';
 import { Request, Response } from 'express';
 
 import { alpacaClient } from '../alpacaClient';
@@ -18,6 +18,7 @@ import { db } from '../database';
 import { enqueue } from '../listener/queue';
 import { updateTradePriceSubscriptionsToAccountPositions } from '../listener/tradeListener/tradeListener';
 import { getTa } from '../ta/ta';
+import { fetchBars } from '../listener/tradeListener/fetchPrices';
 
 export const getEnvironmentHandler = async (_: Request, res: Response) => {
   res.send({ ...ALPACA_API_KEYS, IS_DEV });
@@ -68,6 +69,24 @@ export const getAccountHandler = async (_: Request, res: Response) => {
   try {
     const account = db.getAccount();
     res.send(account);
+  } catch (e) {
+    console.error(e);
+    res.sendStatus(400);
+  }
+};
+
+export const getBarsHandler = async (req: Request, res: Response) => {
+  try {
+    console.log('get bars handler', req.query);
+    const symbolsRaw = req.query.symbols as string;
+    const startDateRaw = req.query.start_date as string;
+    const endDateRaw = req.query.end_date as string;
+    const timeframe = (req.query.timeframe as BarsTimeframe) || '1Day';
+    const symbols = symbolsRaw.split(',');
+    const startDate = startDateRaw ? new Date(startDateRaw) : new Date();
+    const endDate = endDateRaw ? new Date(endDateRaw) : new Date();
+    const bars = await fetchBars(symbols, startDate, endDate, timeframe);
+    res.send(bars);
   } catch (e) {
     console.error(e);
     res.sendStatus(400);

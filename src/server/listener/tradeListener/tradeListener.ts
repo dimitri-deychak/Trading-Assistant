@@ -5,55 +5,80 @@ import { db } from '../../database';
 import { enqueue } from '../queue';
 import { latestPriceHandler } from './latestPriceHandlers';
 import { findCommonElements } from '../../../shared/utils';
+import { setPriceInterval } from '../intervals';
 
-export const tradeStream = new AlpacaStream({
-  credentials: {
-    key: ALPACA_API_KEYS.API_KEY_ID,
-    secret: ALPACA_API_KEYS.SECRET_KEY,
-    paper: IS_DEV,
-  },
-  type: 'market_data',
-  source: 'sip',
-});
+const { API_KEY_ID, SECRET_KEY } = ALPACA_API_KEYS;
 
-const testSymbols = ['SPY', 'QQQ', 'AMZN', 'NFLX', 'AAPL'];
-tradeStream.once('authenticated', async () => {
-  enqueue(async () => updateTradePriceSubscriptionsToAccountPositions());
-});
+console.log({ API_KEY_ID, SECRET_KEY });
 
-const exclude_conditions = ['B', 'W', '4', '7', '9', 'C', 'G', 'H', 'I', 'M', 'N', 'P', 'Q', 'R', 'T', 'U', 'V', 'Z'];
-tradeStream.on('trade', async (trade: Trade) => {
-  enqueue(async () => {
-    try {
-      const excludeTrade = findCommonElements(exclude_conditions, trade.c);
-      if (excludeTrade) {
-        console.log('Excluding trade', trade.c.toString(), trade.p);
-        return;
-      }
+export const tradeStream =
+  !IS_DEV &&
+  new AlpacaStream({
+    credentials: {
+      key: API_KEY_ID,
+      secret: SECRET_KEY,
+      paper: IS_DEV,
+    },
+    type: 'market_data',
+    source: 'sip',
+  });
 
-      console.log(`Begin Handler for ${trade.S}. Price: ${trade.p}`);
-      await latestPriceHandler(trade);
-      console.log(`End Handler for ${trade.S}`);
-    } catch (e) {
-      console.error(e);
+if (tradeStream) {
+  tradeStream.once('authenticated', async () => {
+    console.log('Trade stream authenticated');
+    enqueue(async () => updateTradePriceSubscriptionsToAccountPositions());
+  });
+
+  tradeStream.on('trade', async (trade: Trade) => {
+    enqueue(async () => {
+      await handleNewTrade(trade);
+    });
+  });
+
+  tradeStream.on('message', (message) => console.log({ message }));
+
+  tradeStream.on('subscription', (message) => {
+    const { T } = message;
+    if (T === 'subscription') {
+      console.log(message);
     }
   });
-});
+}
 
-tradeStream.on('subscription', (message) => {
-  const { T } = message;
-  if (T === 'subscription') {
-    console.log(message);
-  }
-});
+// const testSymbols = ['SPY', 'QQQ', 'AMZN', 'NFLX', 'AAPL'];
 
 export const updateTradePriceSubscriptionsToAccountPositions = () => {
-  const symbolsToSubscribeTo = db
-    .getAccountPositions()
-    .filter(onlyOpenPositionsFilter)
-    .map((position) => position.symbol);
-  tradeStream.subscribe('trades', symbolsToSubscribeTo);
+  const symbolsToSubscribeTo = getSymbolsToSubscribeTo();
+  if (tradeStream) {
+    tradeStream.subscribe('trades', symbolsToSubscribeTo);
+  } else {
+    setPriceInterval();
+  }
 };
 
 const onlyOpenPositionsFilter = (position: IPosition) =>
   [PositionStatus.OPEN, PositionStatus.RUNNER].includes(position.status);
+
+export const getSymbolsToSubscribeTo = () => {
+  return db
+    .getAccountPositions()
+    .filter(onlyOpenPositionsFilter)
+    .map((position) => position.symbol);
+};
+
+const exclude_conditions = ['B', 'W', '4', '7', '9', 'C', 'G', 'H', 'I', 'M', 'N', 'P', 'Q', 'R', 'T', 'U', 'V', 'Z'];
+export const handleNewTrade = async (trade: Trade) => {
+  try {
+    const excludeTrade = findCommonElements(exclude_conditions, trade.c);
+    if (excludeTrade) {
+      console.log('Excluding trade', trade.c.toString(), trade.p);
+      return;
+    }
+
+    console.log(`Begin Handler for ${trade.S}. Price: ${trade.p}`);
+    await latestPriceHandler(trade);
+    console.log(`End Handler for ${trade.S}`);
+  } catch (e) {
+    console.error(e);
+  }
+};

@@ -1,14 +1,19 @@
+import { IS_DEV } from '../config';
 import { db } from '../database';
 import { fetchAccountActivities } from './accountListener/accountListener';
+import { setAccountInterval, setPriceInterval } from './intervals';
 import { removePositionsThatExistInDbButNotInServer } from './syncTradesSinceLastUpdate';
+
 const initialSetup = async () => {
   await db.init();
   await fetchAccountActivities();
   await removePositionsThatExistInDbButNotInServer();
 
-  setInterval(() => {
-    enqueue(async () => await fetchAccountActivities());
-  }, 1000);
+  setAccountInterval();
+
+  if (IS_DEV) {
+    setPriceInterval();
+  }
 };
 
 let currentPromise = initialSetup();

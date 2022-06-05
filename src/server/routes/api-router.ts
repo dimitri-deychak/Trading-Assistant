@@ -9,6 +9,7 @@ import {
   newPositionHandler,
   updatePositionHandler,
   getTaHandler,
+  getBarsHandler,
 } from './route-callbacks';
 
 export function apiRouter() {
@@ -23,5 +24,6 @@ export function apiRouter() {
   router.get('/api/account', getAccountHandler);
   router.post('/api/remove-position', cancelAndClosePosition);
   router.get('/api/ta', getTaHandler);
+  router.get('/api/get-bars', getBarsHandler);
   return router;
 }
