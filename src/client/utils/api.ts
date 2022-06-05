@@ -49,7 +49,7 @@ export const getAlpacaClient = (env: IEnv) => {
     credentials: {
       key: API_KEY_ID,
       secret: SECRET_KEY,
-      paper: true,
+      paper: IS_DEV,
     } as DefaultCredentials,
     rate_limit: false,
   });

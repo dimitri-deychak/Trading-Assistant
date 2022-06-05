@@ -1,6 +1,6 @@
 import { AlpacaStream, Trade } from '@master-chief/alpaca';
 import { IPosition, PositionStatus } from '../../../shared/interfaces';
-import { ALPACA_API_KEYS } from '../../config';
+import { ALPACA_API_KEYS, IS_DEV } from '../../config';
 import { db } from '../../database';
 import { enqueue } from '../queue';
 import { latestPriceHandler } from './latestPriceHandlers';
@@ -10,7 +10,7 @@ export const tradeStream = new AlpacaStream({
   credentials: {
     key: ALPACA_API_KEYS.API_KEY_ID,
     secret: ALPACA_API_KEYS.SECRET_KEY,
-    paper: true,
+    paper: IS_DEV,
   },
   type: 'market_data',
   source: 'sip',
