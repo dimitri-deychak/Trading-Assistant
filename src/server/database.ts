@@ -139,8 +139,8 @@ class Database {
   }
 
   async putAccount(account: Account) {
-    account.positions = account.positions.filter(Boolean) ?? [];
-    account.closedPositions = account.closedPositions.filter(Boolean) ?? [];
+    account.positions = account.positions?.filter(Boolean) ?? [];
+    account.closedPositions = account.closedPositions?.filter(Boolean) ?? [];
     try {
       await s3Client.send(
         new PutObjectCommand({
