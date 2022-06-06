@@ -1,6 +1,6 @@
 import { AlpacaStream, Trade } from '@master-chief/alpaca';
 import { IPosition, PositionStatus } from '../../../shared/interfaces';
-import { ALPACA_API_KEYS, IS_DEV } from '../../config';
+import { ALPACA_API_KEYS, IS_DEV_ALPACA } from '../../config';
 import { db } from '../../database';
 import { enqueue } from '../queue';
 import { latestPriceHandler } from './latestPriceHandlers';
@@ -12,12 +12,12 @@ const { API_KEY_ID, SECRET_KEY } = ALPACA_API_KEYS;
 console.log({ API_KEY_ID, SECRET_KEY });
 
 export const tradeStream =
-  !IS_DEV &&
+  !IS_DEV_ALPACA &&
   new AlpacaStream({
     credentials: {
       key: API_KEY_ID,
       secret: SECRET_KEY,
-      paper: IS_DEV,
+      paper: IS_DEV_ALPACA,
     },
     type: 'market_data',
     source: 'sip',
