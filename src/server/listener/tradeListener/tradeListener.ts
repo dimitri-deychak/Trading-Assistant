@@ -9,8 +9,6 @@ import { setPriceInterval } from '../intervals';
 
 const { API_KEY_ID, SECRET_KEY } = ALPACA_API_KEYS;
 
-console.log({ API_KEY_ID, SECRET_KEY });
-
 export const tradeStream =
   !IS_DEV_ALPACA &&
   new AlpacaStream({
