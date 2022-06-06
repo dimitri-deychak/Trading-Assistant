@@ -2,14 +2,13 @@ import { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import { BarPrice, BarPrices, ColorType, createChart, CrosshairMode, ISeriesApi } from 'lightweight-charts';
 import { addCandlestickBars, addVolumeBars, addFiftySma } from './TvChartUtils';
 import { Bar } from '@master-chief/alpaca';
-import { CustomBar, IPosition } from '../../../shared/interfaces';
+import { CustomBar, IPosition, ScanResult } from '../../../shared/interfaces';
 
 export const useCreateChart = (
   chartContainerRef: MutableRefObject<HTMLDivElement>,
   height: number,
   width: number,
   bars: Bar[],
-
   setLegendText: Dispatch<SetStateAction<string>>,
   position?: IPosition,
   onClick?: (time: string, price: number, priceSeries: ISeriesApi<'Candlestick'>) => void,

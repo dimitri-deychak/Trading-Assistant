@@ -14,14 +14,13 @@ import { red } from '@mui/material/colors';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { Box, Button, ListItemIcon, ListItemText, Menu, MenuItem, MenuList, Typography } from '@mui/material';
-import { Account, IPosition, ListenerExitSide, PositionStatus } from '../../shared/interfaces';
+import { Account, IPosition, ListenerExitSide, PositionStatus, ScanResult } from '../../shared/interfaces';
 import { ListenersForm } from './TradeForm';
 import { removePosition } from '../utils/api';
 import { AlpacaClient } from '@master-chief/alpaca';
 import { TvChart } from './TvChart/TvChart';
 import { useWindowSize } from '../utils/windowSize';
 import { drawerWidth } from './styledAppComponents';
-import { StockMeta } from './StockMeta';
 import { useStockMeta } from '../utils/useStockMeta';
 
 interface ExpandMoreProps extends IconButtonProps {
@@ -40,12 +39,13 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
 }));
 
 type TradeDetailsCardProps = {
-  position: IPosition;
+  position?: IPosition;
+  scanResult?: ScanResult;
   onAccountUpdated: (newAccount: Account, msg?: string) => void;
   client: AlpacaClient;
 };
 
-export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccountUpdated, client }) => {
+export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, scanResult, onAccountUpdated, client }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handlePositionMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -77,8 +77,8 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
   const [stockMeta, setStockMeta] = useState({} as any);
 
   useEffect(() => {
-    useStockMeta(position.symbol, setStockMeta);
-  }, [position.symbol]);
+    useStockMeta(scanResult?.symbol || position.symbol, setStockMeta);
+  }, [scanResult?.symbol, position?.symbol]);
 
   return (
     <Card
@@ -94,7 +94,7 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
       <CardHeader
         avatar={
           <Avatar sx={{ bgcolor: red[500] }} aria-label='recipe'>
-            {position.symbol}
+            {scanResult?.symbol || position?.symbol}
           </Avatar>
         }
         action={
@@ -126,12 +126,15 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
             </Menu>
           </>
         }
-        title={stockMeta?.name || position.symbol}
+        title={stockMeta?.name || position?.symbol}
         subheader={`Industry: ${stockMeta?.finnhubIndustry}`}
       />
 
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <CardMedia>
+          {scanResult && (
+            <TvChart symbol={scanResult?.symbol} client={client} height={tvChartHeight} width={tvChartWidth}></TvChart>
+          )}
           {position && (
             <TvChart position={position} client={client} height={tvChartHeight} width={tvChartWidth}></TvChart>
           )}
@@ -146,7 +149,7 @@ export const TradeDetailsCard: VFC<TradeDetailsCardProps> = ({ position, onAccou
       <Collapse in={expanded} timeout='auto' unmountOnExit>
         <CardContent>
           {' '}
-          <ListenersForm position={position} onAccountUpdated={onAccountUpdated} />
+          {position && <ListenersForm position={position} onAccountUpdated={onAccountUpdated} />}
         </CardContent>
       </Collapse>
     </Card>

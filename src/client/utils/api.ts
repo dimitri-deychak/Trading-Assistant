@@ -1,6 +1,6 @@
 import { AlpacaClient, DefaultCredentials, Trade } from '@master-chief/alpaca';
 import API, { AxiosResponse } from 'axios';
-import { IEnv } from '../../shared/interfaces';
+import { IEnv, TAReturnValue } from '../../shared/interfaces';
 import { Account, IPosition, IRawTradeEntry } from '../../shared/interfaces';
 
 export const getEnv = async () => {
@@ -40,7 +40,7 @@ export const removePosition = async (position: IPosition) => {
 
 export const getTa = async (type: string, symbol: string, length: number) => {
   const { data: ta } = await API.get(`/api/ta?symbol=${symbol}&type=${type}&length=${length}`);
-  return ta;
+  return ta as TAReturnValue;
 };
 
 export const getAlpacaClient = (env: IEnv) => {
