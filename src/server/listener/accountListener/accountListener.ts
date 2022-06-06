@@ -8,10 +8,9 @@ const SIXTY_SECONDS_IN_MS = 1000 * 60;
 const SIXTY_MINUTES_IN_MS = SIXTY_SECONDS_IN_MS * 60;
 const ONE_DAY_IN_MS = 24 * SIXTY_MINUTES_IN_MS;
 
-
 export const fetchAccountActivities = async () => {
   const lastTradeUpdateDate = new Date(db.getLastTradeUpdateDate());
-  const aMinuteLessFromLastTradeUpdate = new Date(lastTradeUpdateDate.getTime() - SIXTY_SECONDS_IN_MS);
+  const aMinuteLessFromLastTradeUpdate = new Date(lastTradeUpdateDate.getTime() - ONE_DAY_IN_MS);
   console.log('Fetching acct activities after ', getCST(aMinuteLessFromLastTradeUpdate));
 
   await db.saveLastTradeUpdateDate();

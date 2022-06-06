@@ -12,8 +12,8 @@ const newAccount: Account = {
   positions: [],
   closedPositions: [],
   lastTradeUpdateDate: '',
-  activityRecord: {}
-}
+  activityRecord: {},
+};
 
 const s3Client = new S3Client({
   region: process.env.BUCKETEER_AWS_REGION,
@@ -42,6 +42,12 @@ class Database {
 
   async init() {
     await this.syncAccount();
+
+    // if (!this.account.activityRecord) {
+    //   this.account.activityRecord = {};
+
+    //   await this.putAccount(this.account);
+    // }
 
     this._isInitialized = true;
   }

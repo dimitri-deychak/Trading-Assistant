@@ -33,8 +33,6 @@ if (tradeStream) {
     });
   });
 
-  tradeStream.on('message', (message) => console.log({ message }));
-
   tradeStream.on('subscription', (message) => {
     const { T } = message;
     if (T === 'subscription') {
