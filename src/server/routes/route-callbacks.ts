@@ -75,6 +75,19 @@ export const getAccountHandler = async (_: Request, res: Response) => {
   }
 };
 
+export const authenticateHandler = async (req: Request, res: Response) => {
+  try {
+    if (req.query.password === 'deytime') {
+      res.send(true);
+    } else {
+      res.send(false);
+    }
+  } catch (e) {
+    console.error(e);
+    res.sendStatus(400);
+  }
+};
+
 export const getBarsHandler = async (req: Request, res: Response) => {
   try {
     console.log('get bars handler', req.query);
