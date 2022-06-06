@@ -17,5 +17,6 @@ const initialSetup = async () => {
 };
 
 let currentPromise = initialSetup();
-export const enqueue = (promise: (value: void) => void | PromiseLike<void>) =>
-  (currentPromise = currentPromise.then(promise));
+export const enqueue = (promise: (value: void) => void | PromiseLike<void>) => {
+  currentPromise = currentPromise.then(promise).catch((e) => console.log('ERROR in promise queue', e));
+};
