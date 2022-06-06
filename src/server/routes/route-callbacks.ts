@@ -98,10 +98,8 @@ export const getBarsHandler = async (req: Request, res: Response) => {
     const symbols = (symbolsRaw as string).split(',');
     const startDate = startDateRaw ? new Date(startDateRaw as string) : new Date();
     const endDate = endDateRaw ? new Date(endDateRaw as string) : new Date();
-    enqueue(async () => {
-      const bars = await fetchBars(symbols, startDate, endDate, timeframe as BarsTimeframe);
-      res.send(bars);
-    });
+    const bars = await fetchBars(symbols, startDate, endDate, timeframe as BarsTimeframe);
+    res.send(bars);
   } catch (e) {
     console.error(e);
     res.sendStatus(400);
