@@ -2056,10 +2056,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@master-chief/alpaca@^6.3.16":
-  version "6.3.16"
-  resolved "https://registry.yarnpkg.com/@master-chief/alpaca/-/alpaca-6.3.16.tgz#be2fec3472ee23f8be248fad4f808ac2cab4f3da"
-  integrity sha512-ZA/lJ9sdUMPfbltVkcXApojgCdPvZH1Po1A+O3AvkeTHtqf3a4eSobo7PoZ305ObSH8paW5UUdNNZ/4TfJSAwA==
+"@master-chief/alpaca@^6.3.18":
+  version "6.3.18"
+  resolved "https://registry.yarnpkg.com/@master-chief/alpaca/-/alpaca-6.3.18.tgz#e6a8ec35921ec8d0be0a1a0d775bb87ffb375de7"
+  integrity sha512-60dOcVoey8qn4Ahzf98rnTl+qNeYoXzpspz4zKs+YIVyrnr8IsuKgcAsAqt2Y9eTHXLeJIAELTUJHqzXqarwXg==
   dependencies:
     "@master-chief/map" "^0.0.6"
     abort-controller "^3.0.0"

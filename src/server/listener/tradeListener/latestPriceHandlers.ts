@@ -17,7 +17,9 @@ export const latestPriceHandler = async (trade: Trade) => {
 
     if (!positionState) {
       console.log(`Unsubscribing from stream for ${symbol}.`);
-      tradeStream.unsubscribe('trades', [symbol]);
+      if (tradeStream) {
+        tradeStream.unsubscribe('trades', [symbol]);
+      }
       return;
     }
 

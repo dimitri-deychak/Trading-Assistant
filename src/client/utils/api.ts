@@ -8,6 +8,12 @@ export const getEnv = async () => {
   return env;
 };
 
+export const authenticate = async (password: string) => {
+  const { data: authenticated } = (await API.get(`/api/authenticate?password=${password}`)) as AxiosResponse<IEnv>;
+  console.log({ authenticated });
+  return authenticated;
+};
+
 export const getAccount = async () => {
   const { data: account } = (await API.get('/api/account')) as AxiosResponse<Account>;
   return account;

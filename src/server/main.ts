@@ -6,11 +6,11 @@ import { staticsRouter } from './routes/statics-router';
 import * as config from './config';
 
 import { tradeStream } from './listener/tradeListener/tradeListener';
-
-export let stopInterval = undefined;
+import { clearAccountInterval, clearPriceInterval } from './listener/intervals';
 
 console.log(`*******************************************`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`ALPACA ENV: ${process.env.ALPACA_ENV}`);
 console.log(`config: ${JSON.stringify(config, null, 2)}`);
 console.log(`*******************************************`);
 
@@ -29,10 +29,11 @@ app.listen(config.SERVER_PORT, () => {
 async function exitHandler(evtOrExitCodeOrError: number | string | Error) {
   console.log({ evtOrExitCodeOrError });
   try {
-    tradeStream.getConnection().close();
-    if (stopInterval) {
-      stopInterval();
+    if (tradeStream) {
+      tradeStream.getConnection().close();
     }
+    clearAccountInterval();
+    clearPriceInterval();
     console.log('Closed connections');
   } catch (e) {
     console.error('EXIT HANDLER ERROR', e);

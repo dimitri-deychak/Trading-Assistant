@@ -1,11 +1,13 @@
 import { Activity } from '@master-chief/alpaca/@types/entities';
 import { alpacaClient } from '../../alpacaClient';
 import { db } from '../../database';
+import { enqueue } from '../queue';
 import { accountActivityHandler } from './accountTradeHandlers';
 
 const SIXTY_SECONDS_IN_MS = 1000 * 60;
 const SIXTY_MINUTES_IN_MS = SIXTY_SECONDS_IN_MS * 60;
 const ONE_DAY_IN_MS = 24 * SIXTY_MINUTES_IN_MS;
+
 
 export const fetchAccountActivities = async () => {
   const lastTradeUpdateDate = new Date(db.getLastTradeUpdateDate());

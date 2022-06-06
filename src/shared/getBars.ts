@@ -1,5 +1,7 @@
 import { AlpacaClient, GetBars, PageOfBars, Bar } from '@master-chief/alpaca';
 
+
+
 export async function getTradeBars(
   client: AlpacaClient,
   symbol: string,

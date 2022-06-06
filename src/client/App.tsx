@@ -17,7 +17,7 @@ import { TradeDetailsCard } from './components/TradeDetailsCard';
 import { Account, IPosition, IRawTradeEntry, PositionStatus } from '../shared/interfaces';
 
 import { IEnv } from '../shared/interfaces';
-import { clearState, getAccount, getAlpacaClient, getEnv, submitNewPosition } from './utils/api';
+import { authenticate, clearState, getAccount, getAlpacaClient, getEnv, submitNewPosition } from './utils/api';
 import Dialog from '@mui/material/Dialog';
 import { Button, DialogContent, DialogTitle, Snackbar } from '@mui/material';
 
@@ -29,6 +29,7 @@ export const App = () => {
   const [env, setEnv] = useState<IEnv>();
 
   const [newTradeModalOpen, setNewTradeModalOpen] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
     const getAccountData = async () => {
@@ -38,7 +39,24 @@ export const App = () => {
       setSelectedPosition(account.positions[0] ?? undefined);
     };
 
-    getAccountData();
+    if (authenticated) {
+      getAccountData();
+    }
+  }, [authenticated]);
+
+  useEffect(() => {
+    const authenticatePrompt = async () => {
+      let isAuthenticated = false;
+      while (isAuthenticated === false) {
+        const passwordTry = window.prompt('Enter password:');
+        const success = await authenticate(passwordTry);
+        if (success) {
+          isAuthenticated = true;
+          setAuthenticated(isAuthenticated);
+        }
+      }
+    };
+    authenticatePrompt();
   }, []);
 
   const alpacaClient = useMemo(() => {
