@@ -1,4 +1,4 @@
-import { IS_DEV } from '../config';
+import { IS_DEV_ALPACA } from '../config';
 import { db } from '../database';
 import { fetchAccountActivities } from './accountListener/accountListener';
 import { setAccountInterval, setPriceInterval } from './intervals';
@@ -11,7 +11,7 @@ const initialSetup = async () => {
 
   setAccountInterval();
 
-  if (IS_DEV) {
+  if (IS_DEV_ALPACA) {
     setPriceInterval();
   }
 };
