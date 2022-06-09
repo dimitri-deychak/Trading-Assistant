@@ -93,6 +93,7 @@ const handleBuyOrderFilled = async (positionState: IPosition, activity: TradeAct
   };
 
   await db.putAccountPosition(newPositionState);
+  console.log({ newAccount: db.getAccount() });
   updateTradePriceSubscriptionsToAccountPositions();
 };
 
@@ -133,6 +134,7 @@ const handleSellOrderFill = async (positionState: IPosition, activity: TradeActi
   }
   // Update db with order state
   await db.putAccountPosition(positionState);
+  console.log({ newAccount: db.getAccount() });
 
   if (positionState.positionQty > 0) {
     const shouldBreakEvenOnRest =
@@ -150,6 +152,7 @@ const handleSellOrderFill = async (positionState: IPosition, activity: TradeActi
     const newClosedPositions = [...closedPositions, positionState];
     const newAccount = { ...account, positions: newPositions, closedPositions: newClosedPositions };
     await db.putAccount(newAccount);
+    console.log({ newAccount: db.getAccount() });
   }
 };
 
@@ -232,4 +235,5 @@ const handleBreakEvenOnRest = async (positionState: IPosition) => {
   };
 
   await db.putAccountPosition(newPositionState);
+  console.log({ newAccount: db.getAccount() });
 };

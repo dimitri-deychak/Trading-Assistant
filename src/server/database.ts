@@ -157,7 +157,6 @@ class Database {
           Body: newAccount,
         }),
       );
-      console.log('Just saved new account', newAccount);
       await this.syncAccount();
     } catch (e) {
       console.error('S3 Account Write Error', e);
