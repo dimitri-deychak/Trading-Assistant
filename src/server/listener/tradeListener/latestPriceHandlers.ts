@@ -116,4 +116,5 @@ const handleListenerOrderExecuted = async (
   };
 
   await db.putAccountPosition(newPositionState);
+  console.log({ newAccount: db.getAccount() });
 };
