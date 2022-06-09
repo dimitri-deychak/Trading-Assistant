@@ -147,14 +147,17 @@ class Database {
   async putAccount(account: Account) {
     account.positions = account.positions?.filter(Boolean) ?? [];
     account.closedPositions = account.closedPositions?.filter(Boolean) ?? [];
+
+    const newAccount = JSON.stringify(account);
     try {
       await s3Client.send(
         new PutObjectCommand({
           Bucket: process.env.BUCKETEER_BUCKET_NAME,
           Key: this.accountIndexKey,
-          Body: JSON.stringify(account),
+          Body: newAccount,
         }),
       );
+      console.log('Just saved new account', newAccount);
       await this.syncAccount();
     } catch (e) {
       console.error('S3 Account Write Error', e);

@@ -8,12 +8,14 @@ let accountIntervalId: NodeJS.Timer;
 
 export const clearPriceInterval = () => {
   if (priceIntervalStagingId) {
+    console.log('clearing price interval', priceIntervalStagingId);
     clearInterval(priceIntervalStagingId);
   }
 };
 
 export const clearAccountInterval = () => {
   if (accountIntervalId) {
+    console.log('clearing account interval', accountIntervalId);
     clearInterval(accountIntervalId);
   }
 };
@@ -36,7 +38,7 @@ export const setPriceInterval = () => {
 export const setAccountInterval = () => {
   clearAccountInterval();
 
-  accountIntervalId = setInterval(() => {
-    enqueue(async () => await fetchAccountActivities());
-  }, 1000);
+  accountIntervalId = setInterval(async () => {
+    await fetchAccountActivities();
+  }, 2500);
 };
