@@ -11,8 +11,8 @@ Just clone this repository into your own project folder. and start working
 ```bash
 git clone https://github.com/gilamran/fullstack-typescript.git <MyProjectName>
 cd <MyProjectName>
-npm install
-npm run dev
+yarn
+yarn dev
 ```
 
 If you want to detach from this repository into your own repository do this:
