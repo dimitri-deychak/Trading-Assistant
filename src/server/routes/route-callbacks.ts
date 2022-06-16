@@ -18,7 +18,8 @@ import { db } from '../database';
 import { enqueue } from '../listener/queue';
 import { updateTradePriceSubscriptionsToAccountPositions } from '../listener/tradeListener/tradeListener';
 import { getTa } from '../ta/ta';
-import { fetchBars } from '../listener/tradeListener/fetchPrices';
+import { fetchBars, fetchBarsCSV } from '../listener/tradeListener/fetchPrices';
+import { stringify } from 'csv-stringify/sync';
 
 export const getEnvironmentHandler = async (_: Request, res: Response) => {
   res.send({ ...ALPACA_API_KEYS, IS_DEV: IS_DEV_ALPACA });
@@ -82,6 +83,25 @@ export const authenticateHandler = async (req: Request, res: Response) => {
     } else {
       res.send(false);
     }
+  } catch (e) {
+    console.error(e);
+    res.sendStatus(400);
+  }
+};
+
+export const getBarsAsCSVHandler = async (req: Request, res: Response) => {
+  try {
+    console.log('get bars handler', req.query);
+    const {
+      query: { symbols: symbolsRaw, start_date: startDateRaw, end_date: endDateRaw, timeframe = '1Day' },
+    } = req;
+
+    const symbols = (symbolsRaw as string).split(',');
+    const startDate = startDateRaw ? new Date(startDateRaw as string) : new Date();
+    const endDate = endDateRaw ? new Date(endDateRaw as string) : new Date();
+    const bars = await fetchBarsCSV(symbols, startDate, endDate, timeframe as BarsTimeframe);
+    res.setHeader('content-type', 'text/csv');
+    res.send(stringify(bars));
   } catch (e) {
     console.error(e);
     res.sendStatus(400);
