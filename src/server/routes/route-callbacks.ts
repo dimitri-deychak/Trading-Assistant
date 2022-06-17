@@ -91,7 +91,7 @@ export const authenticateHandler = async (req: Request, res: Response) => {
 
 export const getBarsAsCSVHandler = async (req: Request, res: Response) => {
   try {
-    console.log('get bars handler', req.query);
+    console.log('get bars as csv handler', req.query);
     const {
       query: { symbols: symbolsRaw, start_date: startDateRaw, end_date: endDateRaw, timeframe = '1Day' },
     } = req;
@@ -101,7 +101,7 @@ export const getBarsAsCSVHandler = async (req: Request, res: Response) => {
     const endDate = endDateRaw ? new Date(endDateRaw as string) : new Date();
     const bars = await fetchBarsCSV(symbols, startDate, endDate, timeframe as BarsTimeframe);
     res.setHeader('content-type', 'text/csv');
-    res.send(stringify(bars));
+    res.send(stringify(bars, { cast: { date: (v) => v.toISOString() } }));
   } catch (e) {
     console.error(e);
     res.sendStatus(400);

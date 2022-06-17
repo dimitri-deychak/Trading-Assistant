@@ -5,7 +5,7 @@ import { LatestTrade } from '@master-chief/alpaca/@types/entities';
 import { stringify } from 'csv-stringify/sync';
 
 export const fetchBarsCSV = async (symbols: string[], startDate: Date, endDate: Date, timeframe: BarsTimeframe) => {
-  const rows: [any[]] = [['symbol', 'time', 'open', 'high', 'low', 'volume']];
+  const rows: [any[]] = [['symbol', 'date', 'open', 'high', 'low', 'close', 'volume']];
   for (const symbol of symbols) {
     rows.push(
       ...(await getTradeBars(alpacaClient, symbol, startDate, endDate, timeframe)).map((bar) => [
@@ -14,6 +14,7 @@ export const fetchBarsCSV = async (symbols: string[], startDate: Date, endDate: 
         bar.o,
         bar.h,
         bar.l,
+        bar.c,
         bar.v,
       ]),
     );
