@@ -1,7 +1,5 @@
-import { AlpacaClient, GetBars, PageOfBars, Bar } from '@master-chief/alpaca';
+import { AlpacaClient, GetBars, Bar } from '@master-chief/alpaca';
 import { BarsTimeframe } from '@master-chief/alpaca/src/params';
-
-export type BarsJsonResponse = { symbol: string };
 
 export async function getTradeBars(
   client: AlpacaClient,
