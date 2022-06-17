@@ -2,6 +2,24 @@ import { alpacaClient } from '../../alpacaClient';
 import { Bar, BarsTimeframe, Trade } from '@master-chief/alpaca';
 import { BarsJsonResponse, getTradeBars } from '../../../shared/getBars';
 import { LatestTrade } from '@master-chief/alpaca/@types/entities';
+import { stringify } from 'csv-stringify/sync';
+
+export const fetchBarsCSV = async (symbols: string[], startDate: Date, endDate: Date, timeframe: BarsTimeframe) => {
+  const rows: [any[]] = [['symbol', 'time', 'open', 'high', 'low', 'volume']];
+  for (const symbol of symbols) {
+    rows.push(
+      ...(await getTradeBars(alpacaClient, symbol, startDate, endDate, timeframe)).map((bar) => [
+        symbol,
+        bar.t,
+        bar.o,
+        bar.h,
+        bar.l,
+        bar.v,
+      ]),
+    );
+  }
+  return rows;
+};
 
 export const fetchBars = (symbols: string[], startDate: Date, endDate: Date, timeframe: BarsTimeframe) => {
   const promises: Promise<Bar[]>[] = [];

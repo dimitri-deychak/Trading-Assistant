@@ -28,7 +28,6 @@ export async function getTradeBars(
     }
 
     const currentPage = await client.getBars(request);
-
     bars.push(...currentPage.bars);
     next_page_token = currentPage.next_page_token;
   } while (next_page_token);
