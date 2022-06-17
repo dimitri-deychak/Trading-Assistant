@@ -1,6 +1,6 @@
 import { alpacaClient } from '../../alpacaClient';
 import { Bar, BarsTimeframe, Trade } from '@master-chief/alpaca';
-import { BarsJsonResponse, getTradeBars } from '../../../shared/getBars';
+import { getTradeBars } from '../../../shared/getBars';
 import { LatestTrade } from '@master-chief/alpaca/@types/entities';
 
 export const fetchBars = (symbols: string[], startDate: Date, endDate: Date, timeframe: BarsTimeframe) => {
