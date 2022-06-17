@@ -1,38 +1,37 @@
 import { AlpacaClient, GetBars, PageOfBars, Bar } from '@master-chief/alpaca';
+import { BarsTimeframe } from '@master-chief/alpaca/src/params';
 
-
+export type BarsJsonResponse = { symbol: string };
 
 export async function getTradeBars(
   client: AlpacaClient,
   symbol: string,
   startDate: Date,
   endDate: Date,
-  timeframe: string,
-) {
-  const data = {
-    bars: [] as Bar[],
-    next_page_token: undefined as string | undefined,
-  };
+  timeframe: BarsTimeframe,
+): Promise<Bar[]> {
+  const bars: Bar[] = [];
+  let next_page_token: string;
 
   do {
-    const request = {
+    const request: GetBars = {
       symbol,
       start: startDate,
       end: endDate,
       timeframe,
       adjustment: 'split',
       limit: 10000,
-    } as GetBars;
+    };
 
-    if (data.next_page_token) {
-      request.page_token = data.next_page_token;
+    if (next_page_token) {
+      request.page_token = next_page_token;
     }
 
-    const currentPage = (await client.getBars(request)) as PageOfBars;
+    const currentPage = await client.getBars(request);
 
-    data.bars = data.bars.concat(currentPage.bars);
-    data.next_page_token = currentPage.next_page_token;
-  } while (data.next_page_token);
+    bars.push(...currentPage.bars);
+    next_page_token = currentPage.next_page_token;
+  } while (next_page_token);
 
-  return data.bars;
+  return bars;
 }
