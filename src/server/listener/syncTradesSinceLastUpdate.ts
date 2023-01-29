@@ -67,8 +67,6 @@ import { Account, CustomTradeUpdate, PositionStatus } from '../../shared/interfa
 // };
 
 export const removePositionsThatExistInDbButNotInServer = async () => {
-  const clock = await alpacaClient.getClock();
-  console.log({ clock: clock.next_close });
   console.log('Checking for stale positions...');
 
   const dbPositions = db.getAccountPositions();
