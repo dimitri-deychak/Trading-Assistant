@@ -17,7 +17,7 @@ import { ALPACA_API_KEYS, IS_DEV_ALPACA } from '../config';
 import { db } from '../database';
 import { enqueue } from '../listener/queue';
 import { updateTradePriceSubscriptionsToAccountPositions } from '../listener/tradeListener/tradeListener';
-import { getTa } from '../ta/ta';
+import { getTa, getTradeBarsWithTa } from '../ta/ta';
 import { fetchBars, fetchBarsCSV } from '../listener/tradeListener/fetchPrices';
 import { stringify } from 'csv-stringify/sync';
 
@@ -129,9 +129,7 @@ export const getBarsHandler = async (req: Request, res: Response) => {
 export const getTaHandler = async (req: Request, res: Response) => {
   try {
     const symbol = String(req.query.symbol);
-    const type = String(req.query.type);
-    const length = Number(req.query.length);
-    const ta = await getTa(type, symbol, length);
+    const ta = await getTradeBarsWithTa(symbol);
     res.send(ta);
   } catch (e) {
     console.error(e);
