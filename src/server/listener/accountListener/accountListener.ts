@@ -2,7 +2,6 @@ import { Activity } from '@master-chief/alpaca/@types/entities';
 import { getCST } from '../../../shared/utils';
 import { alpacaClient } from '../../alpacaClient';
 import { db } from '../../database';
-import { enqueue } from '../queue';
 import { accountActivityHandler } from './accountTradeHandlers';
 
 const SIXTY_SECONDS_IN_MS = 1000 * 60;

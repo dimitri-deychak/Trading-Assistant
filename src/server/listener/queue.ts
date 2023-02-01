@@ -1,7 +1,7 @@
 import { IS_DEV_ALPACA, USE_POLLING_INSTEAD_OF_STREAM } from '../config';
 import { db } from '../database';
 import { fetchAccountActivities } from './accountListener/accountListener';
-import { setAccountInterval, setPriceInterval } from './intervals';
+import { setAccountInterval, setClockInterval, setPriceInterval } from './intervals';
 import { removePositionsThatExistInDbButNotInServer } from './syncTradesSinceLastUpdate';
 
 const initialSetup = async () => {
@@ -10,6 +10,7 @@ const initialSetup = async () => {
   await removePositionsThatExistInDbButNotInServer();
 
   setAccountInterval();
+  setClockInterval();
 
   if (IS_DEV_ALPACA || USE_POLLING_INSTEAD_OF_STREAM) {
     setPriceInterval();
