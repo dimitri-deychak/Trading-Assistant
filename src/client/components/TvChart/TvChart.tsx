@@ -40,13 +40,11 @@ export const TvChart: VFC<TvChartProps> = ({
     const _symbol = position?.symbol || symbol;
 
     const hydrateBars = async () => {
-      const { sma: newFiftySMA, tradeBars: newBars } = await getTa('SMA', _symbol, 50);
+      const newBars = await getTa(_symbol);
 
       // test
       setBars(newBars);
       setLegendText(generateLegendText(newBars[newBars.length - 1]));
-
-      console.log({ newBars, newFiftySMA });
     };
 
     hydrateBars();

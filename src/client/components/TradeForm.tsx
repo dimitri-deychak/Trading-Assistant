@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState, VFC } from 'react';
+import React, { ChangeEvent, ChangeEventHandler, useState, VFC } from 'react';
 import {
   Box,
   Divider,
@@ -16,10 +16,13 @@ import {
   CardContent,
   CardActions,
   IconButton,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import {
   Account,
   IListenerExitRule,
+  IListenerSimpleTargetExitRule,
   IPosition,
   ListenerExitSide,
   ListenerQuantityType,
@@ -207,6 +210,8 @@ const ListenerForm: VFC<ListenerFormProps> = ({ symbol, listener, onConfirmAdd, 
     triggerValue,
   } = listener;
 
+  const breakEvenOnRest = (listener as IListenerSimpleTargetExitRule)?.breakEvenOnRest;
+
   const pointerEvents = !onConfirmAdd ? 'none' : 'auto';
 
   const [listenerSide, setListenerSide] = useState<ListenerExitSide>(side);
@@ -258,6 +263,11 @@ const ListenerForm: VFC<ListenerFormProps> = ({ symbol, listener, onConfirmAdd, 
     } else {
       setListenerQuantityValue(selection);
     }
+  };
+
+  const [isBreakEvenOnRestEnabled, setIsBreakEvenOnRestEnabled] = useState(breakEvenOnRest || false);
+  const handleListenerIsBreakEvenOnRest = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setIsBreakEvenOnRestEnabled(event.target.checked);
   };
 
   const saveListener = () => {
@@ -365,6 +375,15 @@ const ListenerForm: VFC<ListenerFormProps> = ({ symbol, listener, onConfirmAdd, 
                 disabled={disabled}
               />
             </FormControl>
+
+            {listenerSide === ListenerExitSide.TAKE_PROFIT && (
+              <FormControl fullWidth>
+                <FormControlLabel
+                  control={<Switch checked={isBreakEvenOnRestEnabled} onChange={handleListenerIsBreakEvenOnRest} />}
+                  label='Break even on rest?'
+                />
+              </FormControl>
+            )}
           </Stack>
         </Stack>
         {onConfirmAdd && (

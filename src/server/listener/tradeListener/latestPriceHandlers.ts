@@ -1,9 +1,17 @@
 import { Trade, Order } from '@master-chief/alpaca';
-import { IPosition, IListenerExitRule, ListenerExitSide } from '../../../shared/interfaces';
+import {
+  IPosition,
+  IListenerExitRule,
+  ListenerExitSide,
+  ListenerTimeRule,
+  ListenerTriggerType,
+} from '../../../shared/interfaces';
 import { alpacaClient } from '../../alpacaClient';
 import { db } from '../../database';
 import { tradeStream } from './tradeListener';
 import { sleep } from '../../../shared/sleep';
+import { getCST } from '../../../shared/utils';
+import { getTa } from '../../ta/ta';
 
 export const latestPriceHandler = async (trade: Trade) => {
   const { p: tradePrice, S: symbol } = trade;
@@ -62,17 +70,77 @@ const processActiveListener = async (
 
 const handleTakeProfitActiveListener = async (
   symbol: string,
-  { triggerValue, closeOrder, order: existingOrderAlreadyPlacedForListener }: IListenerExitRule,
+  { triggerValue, closeOrder, order: existingOrderAlreadyPlacedForListener, timeRule, triggerType }: IListenerExitRule,
   tradePrice: number,
 ) => {
-  if (tradePrice >= triggerValue && !existingOrderAlreadyPlacedForListener) {
+  if (existingOrderAlreadyPlacedForListener) {
+    return;
+  }
+
+  if (timeRule === ListenerTimeRule.DAILY_CLOSE) {
     try {
-      console.log('Take profit hit ', { symbol, tradePrice, triggerValue });
-      const order = await alpacaClient.closePosition(closeOrder);
-      console.log('Firing take profit order: ', JSON.stringify(closeOrder));
-      return order;
+      const clock = await alpacaClient.getClock();
+      const nextClose = clock.next_close;
+      const oneMinuteBeforeClose = new Date(nextClose.getTime() - 1000 * 60);
+      const now = new Date();
+      const withinOneMinuteOfClose = now > oneMinuteBeforeClose && now < nextClose;
+      console.log({
+        nextClose: getCST(nextClose),
+        oneMinuteBeforeClose: getCST(oneMinuteBeforeClose),
+        now: getCST(now),
+        withinOneMinuteOfClose,
+      });
+      if (!withinOneMinuteOfClose) {
+        console.log('Not within one minute of close, skipping take profit listener.');
+        return;
+      }
+      console.log('Within one minute of close, moving forward with take profit listener.');
     } catch (e) {
-      console.error('Error firing take profit order', e);
+      console.log('Error fetching clock from server', e);
+      return;
+    }
+  }
+
+  if (triggerType === ListenerTriggerType.PRICE) {
+    if (tradePrice >= triggerValue) {
+      try {
+        console.log('Take profit hit ', { symbol, tradePrice, triggerValue });
+        const order = await alpacaClient.closePosition(closeOrder);
+        console.log('Firing take profit order: ', JSON.stringify(closeOrder));
+        return order;
+      } catch (e) {
+        console.error('Error firing take profit order', e);
+      }
+    }
+  }
+
+  if (triggerType === ListenerTriggerType.EMA) {
+    const { ema } = await getTa('EMA', symbol, triggerValue);
+    const todaysEma = ema[ema.length - 1];
+    if (tradePrice < todaysEma) {
+      try {
+        console.log('Ema stop hit', { symbol, tradePrice, todaysEma });
+        const order = await alpacaClient.closePosition(closeOrder);
+        console.log('Firing dynamic stop order: ', JSON.stringify(closeOrder));
+        return order;
+      } catch (e) {
+        console.error('Error firing dynamic stop order', e);
+      }
+    }
+  }
+
+  if (triggerType === ListenerTriggerType.SMA) {
+    const { sma } = await getTa('SMA', symbol, triggerValue);
+    const todaysSma = sma[sma.length - 1];
+    if (tradePrice < todaysSma) {
+      try {
+        console.log('Ema stop hit', { symbol, tradePrice, todaysSma });
+        const order = await alpacaClient.closePosition(closeOrder);
+        console.log('Firing dynamic stop order: ', JSON.stringify(closeOrder));
+        return order;
+      } catch (e) {
+        console.error('Error firing dynamic stop order', e);
+      }
     }
   }
 };

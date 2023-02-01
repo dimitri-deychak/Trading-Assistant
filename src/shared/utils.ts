@@ -32,3 +32,51 @@ export const convertDecimalToPercentage = (input: number) => {
 export const findCommonElements = (arr1: string[], arr2: string[]) => {
   return arr1.some((item) => arr2.includes(item));
 };
+
+export const getCST = (date: Date) => {
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  const d = new Date(+date);
+
+  // CST is UTC -0600 so subtract 6 hours and use UTC values
+  let offset = 6;
+  if (isDST(new Date())) {
+    offset = 5;
+  }
+  d.setUTCHours(d.getUTCHours() - offset);
+
+  return (
+    months[d.getUTCMonth()] +
+    ' ' +
+    d.getUTCDate() +
+    ', ' +
+    d.getUTCFullYear() +
+    ' ' +
+    (d.getUTCHours() % 12 || 12) +
+    ':' +
+    ('0' + d.getUTCMinutes()).slice(-2) +
+    ':' +
+    d.getUTCSeconds() +
+    ' ' +
+    (d.getUTCHours() < 12 ? 'AM' : 'PM') +
+    ' Central Time'
+  );
+};
+
+const isDST = (d: Date) => {
+  const jan = new Date(d.getFullYear(), 0, 1).getTimezoneOffset();
+  const jul = new Date(d.getFullYear(), 6, 1).getTimezoneOffset();
+  return Math.max(jan, jul) !== d.getTimezoneOffset();
+};

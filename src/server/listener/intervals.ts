@@ -1,3 +1,4 @@
+import { getTa } from '../ta/ta';
 import { fetchAccountActivities } from './accountListener/accountListener';
 import { enqueue } from './queue';
 import { fetchLatestTrades } from './tradeListener/fetchPrices';
@@ -32,7 +33,7 @@ export const setPriceInterval = () => {
         await handleNewTrade(trade);
       }
     });
-  }, 1000);
+  }, 500);
 };
 
 export const setAccountInterval = () => {

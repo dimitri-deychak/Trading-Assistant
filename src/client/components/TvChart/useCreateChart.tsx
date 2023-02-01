@@ -1,6 +1,6 @@
 import { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import { BarPrice, BarPrices, ColorType, createChart, CrosshairMode, ISeriesApi } from 'lightweight-charts';
-import { addCandlestickBars, addVolumeBars, addFiftySma } from './TvChartUtils';
+import { addCandlestickBars, addVolumeBars, addMovingAverages } from './TvChartUtils';
 import { Bar } from '@master-chief/alpaca';
 import { CustomBar, IPosition } from '../../../shared/interfaces';
 
@@ -54,19 +54,31 @@ export const useCreateChart = (
     height,
   });
 
+  debugger;
   const priceSeries = addCandlestickBars(chart, bars, position);
-  const fiftySmaSeries = addFiftySma(chart, bars);
+  const { sma50Line, ema21Line, ema10Line } = addMovingAverages(chart, bars);
   const volumeSeries = addVolumeBars(chart, bars);
 
   if (chartContainerRef?.current) {
     chart.subscribeCrosshairMove((param) => {
       if (param.time) {
         const price = param.seriesPrices.get(priceSeries) as BarPrices;
-        const fiftySMA = param.seriesPrices.get(fiftySmaSeries);
+        const sma50 = param.seriesPrices.get(sma50Line);
+        const ema21 = param.seriesPrices.get(ema21Line);
+        const ema10 = param.seriesPrices.get(ema10Line);
         const volume = param.seriesPrices.get(volumeSeries) as BarPrice;
         const { open, high, low, close } = price;
         setLegendText(
-          generateLegendText({ o: open, h: high, l: low, c: close, v: volume, fiftySMA } as unknown as CustomBar),
+          generateLegendText({
+            o: open,
+            h: high,
+            l: low,
+            c: close,
+            v: volume,
+            sma50,
+            ema21,
+            ema10,
+          } as unknown as CustomBar),
         );
       } else {
         const lastBar = bars[bars.length - 1];
@@ -91,7 +103,7 @@ export const useCreateChart = (
 
 export const generateLegendText = (priceBar: CustomBar) => {
   try {
-    const { o: open, h: high, l: low, c: close, v: volume, fiftySMA } = priceBar;
+    const { o: open, h: high, l: low, c: close, v: volume, sma50, ema21, ema10 } = priceBar;
     const formattedVolume = volume.toLocaleString(
       undefined, // leave undefined to use the visitor's browser
       // locale or a string like 'en-US' to override it.
@@ -100,8 +112,16 @@ export const generateLegendText = (priceBar: CustomBar) => {
 
     let base = `Open: ${open} - High: ${high} - Low: ${low} - Close: ${close} - Volume: ${formattedVolume}`;
 
-    if (fiftySMA) {
-      base += ` - SMA(50): ${fiftySMA} `;
+    if (sma50) {
+      base += ` - SMA(50): ${sma50} `;
+    }
+
+    if (ema21) {
+      base += ` - EMA(21): ${ema21} `;
+    }
+
+    if (ema10) {
+      base += ` - EMA(10): ${ema10} `;
     }
 
     return base;
