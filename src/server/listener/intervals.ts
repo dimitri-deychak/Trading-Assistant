@@ -39,13 +39,14 @@ export const setClockInterval = async () => {
   clockIntervalId = setInterval(() => {
     enqueue(async () => {
       try {
+        console.log('Fetching clock');
         clock = await alpacaClient.getClock();
       } catch (e) {
         console.log('Error fetching clock from server', e);
         return;
       }
     });
-  });
+  }, 10000);
 };
 
 export const setPriceInterval = () => {
