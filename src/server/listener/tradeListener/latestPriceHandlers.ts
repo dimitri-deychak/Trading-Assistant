@@ -9,9 +9,9 @@ import {
 import { alpacaClient } from '../../alpacaClient';
 import { db } from '../../database';
 import { tradeStream } from './tradeListener';
-import { sleep } from '../../../shared/sleep';
 import { getCST } from '../../../shared/utils';
 import { getTa } from '../../ta/ta';
+import { setPriceInterval } from '../intervals';
 
 export const latestPriceHandler = async (trade: Trade) => {
   const { p: tradePrice, S: symbol } = trade;
@@ -27,7 +27,11 @@ export const latestPriceHandler = async (trade: Trade) => {
       console.log(`Unsubscribing from stream for ${symbol}.`);
       if (tradeStream) {
         tradeStream.unsubscribe('trades', [symbol]);
+      } else {
+        //reset price interval with new positions state
+        setPriceInterval();
       }
+
       return;
     }
 
@@ -77,6 +81,29 @@ const handleTakeProfitActiveListener = async (
     return;
   }
 
+  if (triggerType === ListenerTriggerType.PRICE) {
+    if (tradePrice >= triggerValue) {
+      try {
+        console.log('Take profit hit ', { symbol, tradePrice, triggerValue });
+        const order = await alpacaClient.closePosition(closeOrder);
+        console.log('Firing take profit order: ', JSON.stringify(closeOrder));
+        return order;
+      } catch (e) {
+        console.error('Error firing take profit order', e);
+      }
+    }
+  }
+};
+
+const handleStopLossActiveListener = async (
+  symbol: string,
+  { triggerValue, closeOrder, order: existingOrderAlreadyPlacedForListener, timeRule, triggerType }: IListenerExitRule,
+  tradePrice: number,
+) => {
+  if (existingOrderAlreadyPlacedForListener) {
+    return;
+  }
+
   if (timeRule === ListenerTimeRule.DAILY_CLOSE) {
     try {
       const clock = await alpacaClient.getClock();
@@ -91,26 +118,13 @@ const handleTakeProfitActiveListener = async (
         withinOneMinuteOfClose,
       });
       if (!withinOneMinuteOfClose) {
-        console.log('Not within one minute of close, skipping take profit listener.');
+        console.log('Not within one minute of close, skipping dynamic stop loss listener.');
         return;
       }
-      console.log('Within one minute of close, moving forward with take profit listener.');
+      console.log('Within one minute of close, moving forward with dynamic stop loss listener.');
     } catch (e) {
       console.log('Error fetching clock from server', e);
       return;
-    }
-  }
-
-  if (triggerType === ListenerTriggerType.PRICE) {
-    if (tradePrice >= triggerValue) {
-      try {
-        console.log('Take profit hit ', { symbol, tradePrice, triggerValue });
-        const order = await alpacaClient.closePosition(closeOrder);
-        console.log('Firing take profit order: ', JSON.stringify(closeOrder));
-        return order;
-      } catch (e) {
-        console.error('Error firing take profit order', e);
-      }
     }
   }
 
@@ -127,9 +141,7 @@ const handleTakeProfitActiveListener = async (
         console.error('Error firing dynamic stop order', e);
       }
     }
-  }
-
-  if (triggerType === ListenerTriggerType.SMA) {
+  } else if (triggerType === ListenerTriggerType.SMA) {
     const { sma } = await getTa('SMA', symbol, triggerValue);
     const todaysSma = sma[sma.length - 1];
     if (tradePrice < todaysSma) {
@@ -142,15 +154,7 @@ const handleTakeProfitActiveListener = async (
         console.error('Error firing dynamic stop order', e);
       }
     }
-  }
-};
-
-const handleStopLossActiveListener = async (
-  symbol: string,
-  { triggerValue, closeOrder, order: existingOrderAlreadyPlacedForListener }: IListenerExitRule,
-  tradePrice: number,
-) => {
-  if (tradePrice <= triggerValue && !existingOrderAlreadyPlacedForListener) {
+  } else if (triggerType === ListenerTriggerType.PRICE && tradePrice <= triggerValue) {
     try {
       console.log('Stop hit ', { symbol, tradePrice, triggerValue });
       const order = await alpacaClient.closePosition(closeOrder);
@@ -159,6 +163,8 @@ const handleStopLossActiveListener = async (
     } catch (e) {
       console.error('Error firing stop loss order', e);
     }
+  } else {
+    return;
   }
 };
 
