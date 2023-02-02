@@ -117,6 +117,7 @@ const handleStopLossActiveListener = async (
   if (triggerType === ListenerTriggerType.EMA) {
     const { ema } = await getTa('EMA', symbol, triggerValue);
     const todaysEma = ema[ema.length - 1];
+    console.log(`Stock price: ${tradePrice}, EMA Value: ${todaysEma}`);
     if (tradePrice < todaysEma) {
       try {
         console.log('Ema stop hit', { symbol, tradePrice, todaysEma });
@@ -130,6 +131,7 @@ const handleStopLossActiveListener = async (
   } else if (triggerType === ListenerTriggerType.SMA) {
     const { sma } = await getTa('SMA', symbol, triggerValue);
     const todaysSma = sma[sma.length - 1];
+    console.log(`Stock price: ${tradePrice}, SMA Value: ${todaysSma}`);
     if (tradePrice < todaysSma) {
       try {
         console.log('Ema stop hit', { symbol, tradePrice, todaysSma });
