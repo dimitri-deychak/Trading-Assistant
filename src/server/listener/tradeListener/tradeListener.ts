@@ -9,37 +9,41 @@ import { setPriceInterval } from '../intervals';
 
 const { API_KEY_ID, SECRET_KEY } = ALPACA_API_KEYS;
 
-export const tradeStream =
-  !IS_DEV_ALPACA &&
-  new AlpacaStream({
-    credentials: {
-      key: API_KEY_ID,
-      secret: SECRET_KEY,
-      paper: IS_DEV_ALPACA,
-    },
-    type: 'market_data',
-    source: 'sip',
-  });
+export let tradeStream;
 
-if (tradeStream) {
-  tradeStream.once('authenticated', async () => {
-    console.log('Trade stream authenticated');
-    enqueue(async () => updateTradePriceSubscriptionsToAccountPositions());
-  });
-
-  tradeStream.on('trade', async (trade: Trade) => {
-    enqueue(async () => {
-      await handleNewTrade(trade);
+export const initiateTradeStream = () => {
+  tradeStream =
+    !IS_DEV_ALPACA &&
+    new AlpacaStream({
+      credentials: {
+        key: API_KEY_ID,
+        secret: SECRET_KEY,
+        paper: IS_DEV_ALPACA,
+      },
+      type: 'market_data',
+      source: 'sip',
     });
-  });
 
-  tradeStream.on('subscription', (message) => {
-    const { T } = message;
-    if (T === 'subscription') {
-      console.log(message);
-    }
-  });
-}
+  if (tradeStream) {
+    tradeStream.once('authenticated', async () => {
+      console.log('Trade stream authenticated');
+      enqueue(async () => updateTradePriceSubscriptionsToAccountPositions());
+    });
+
+    tradeStream.on('trade', async (trade: Trade) => {
+      enqueue(async () => {
+        await handleNewTrade(trade);
+      });
+    });
+
+    tradeStream.on('subscription', (message) => {
+      const { T } = message;
+      if (T === 'subscription') {
+        console.log(message);
+      }
+    });
+  }
+};
 
 // const testSymbols = ['SPY', 'QQQ', 'AMZN', 'NFLX', 'AAPL'];
 

@@ -3,6 +3,7 @@ import { db } from '../database';
 import { fetchAccountActivities } from './accountListener/accountListener';
 import { setAccountInterval, setPriceInterval } from './intervals';
 import { removePositionsThatExistInDbButNotInServer } from './syncTradesSinceLastUpdate';
+import { initiateTradeStream } from './tradeListener/tradeListener';
 
 const initialSetup = async () => {
   await db.init();
@@ -13,6 +14,8 @@ const initialSetup = async () => {
 
   if (IS_DEV_ALPACA) {
     setPriceInterval();
+  } else {
+    initiateTradeStream();
   }
 };
 
