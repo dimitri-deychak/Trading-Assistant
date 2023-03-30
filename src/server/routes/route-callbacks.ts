@@ -149,9 +149,7 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
 
   const rMultipleTargetPrice = entryPrice + deRiskTargetMultiple * distanceFromEntryToStop;
 
-  const oneThirdDistanceFromEntryTo1R = ONE_THIRD * distanceFromEntryToStop;
-
-  const limitPrice = entryPrice + oneThirdDistanceFromEntryTo1R;
+  const limitPrice = entryPrice * 1.005;
 
   const notionalValue = Math.floor(riskInDollars / (entryPrice - stopPrice)) * entryPrice;
 
