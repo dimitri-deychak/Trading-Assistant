@@ -11,6 +11,7 @@ const API_KEY_ID = process.env.API_KEY_ID;
 const SECRET_KEY = process.env.SECRET_KEY;
 const PAPER_API_KEY_ID = process.env.PAPER_API_KEY_ID;
 const PAPER_SECRET_KEY = process.env.PAPER_SECRET_KEY;
+const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD;
 
 const ALPACA_API_KEYS = IS_DEV_ALPACA
   ? { API_KEY_ID: PAPER_API_KEY_ID, SECRET_KEY: PAPER_SECRET_KEY }
@@ -25,4 +26,4 @@ const { version: VERSION } = PackageJson;
 const SERVER_PORT = process.env.PORT || 3000;
 const WEBPACK_PORT = 8001; // For dev environment only
 
-export { IS_DEV, VERSION, SERVER_PORT, WEBPACK_PORT, ALPACA_API_KEYS, IS_DEV_ALPACA };
+export { IS_DEV, VERSION, SERVER_PORT, WEBPACK_PORT, ALPACA_API_KEYS, IS_DEV_ALPACA, ACCESS_PASSWORD };

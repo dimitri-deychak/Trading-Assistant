@@ -8,12 +8,11 @@ import {
   IPosition,
   IRawTradeEntry,
   ListenerExitSide,
-  ListenerQuantityType,
   ListenerTimeRule,
   ListenerTriggerType,
   PositionStatus,
 } from '../../shared/interfaces';
-import { ALPACA_API_KEYS, IS_DEV_ALPACA } from '../config';
+import { ACCESS_PASSWORD, ALPACA_API_KEYS, IS_DEV_ALPACA } from '../config';
 import { db } from '../database';
 import { enqueue } from '../listener/queue';
 import { updateTradePriceSubscriptionsToAccountPositions } from '../listener/tradeListener/tradeListener';
@@ -78,7 +77,7 @@ export const getAccountHandler = async (_: Request, res: Response) => {
 
 export const authenticateHandler = async (req: Request, res: Response) => {
   try {
-    if (req.query.password === 'deytime') {
+    if (req.query.password === ACCESS_PASSWORD) {
       res.send(true);
     } else {
       res.send(false);
