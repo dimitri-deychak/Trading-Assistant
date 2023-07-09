@@ -17,7 +17,7 @@ export async function getTradeBars(
       start: startDate,
       end: endDate,
       timeframe,
-      adjustment: 'split',
+      adjustment: 'all',
       limit: 10000,
     };
 
