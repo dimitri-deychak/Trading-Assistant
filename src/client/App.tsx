@@ -29,7 +29,7 @@ export const App = () => {
   const [env, setEnv] = useState<IEnv>();
 
   const [newTradeModalOpen, setNewTradeModalOpen] = useState(false);
-  const [authenticated, setAuthenticated] = useState(false);
+  const [authenticated, setAuthenticated] = useState(true);
 
   useEffect(() => {
     const getAccountData = async () => {
@@ -44,20 +44,20 @@ export const App = () => {
     }
   }, [authenticated]);
 
-  useEffect(() => {
-    const authenticatePrompt = async () => {
-      let isAuthenticated = false;
-      while (isAuthenticated === false) {
-        const passwordTry = window.prompt('Enter password:');
-        const success = await authenticate(passwordTry);
-        if (success) {
-          isAuthenticated = true;
-          setAuthenticated(isAuthenticated);
-        }
-      }
-    };
-    authenticatePrompt();
-  }, []);
+  // useEffect(() => {
+  //   const authenticatePrompt = async () => {
+  //     let isAuthenticated = false;
+  //     while (isAuthenticated === false) {
+  //       const passwordTry = window.prompt('Enter password:');
+  //       const success = await authenticate(passwordTry);
+  //       if (success) {
+  //         isAuthenticated = true;
+  //         setAuthenticated(isAuthenticated);
+  //       }
+  //     }
+  //   };
+  //   authenticatePrompt();
+  // }, []);
 
   const alpacaClient = useMemo(() => {
     if (env) {
