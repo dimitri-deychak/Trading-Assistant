@@ -32,6 +32,8 @@ type TradeEntryFormProps = {
   setRiskInDollars: (risk: number) => void;
   deRiskTargetMultiple: number;
   setDeRiskTargetMultiple: (multiple: number) => void;
+  deRiskTargetPositionPercentage: number;
+  setDeRiskTargetPositionPercentage: (size: number) => void;
 };
 
 export const EntryForm: VFC<TradeEntryFormProps> = ({
@@ -45,6 +47,8 @@ export const EntryForm: VFC<TradeEntryFormProps> = ({
   setRiskInDollars,
   deRiskTargetMultiple,
   setDeRiskTargetMultiple,
+  deRiskTargetPositionPercentage,
+  setDeRiskTargetPositionPercentage,
 }) => {
   const onSymbolTextFieldChange = (event: ChangeEvent<HTMLInputElement>) => setSymbol(event.target.value.toUpperCase());
   const onEntryPriceTextFieldChange = (event: ChangeEvent<HTMLInputElement>) =>
@@ -57,6 +61,9 @@ export const EntryForm: VFC<TradeEntryFormProps> = ({
 
   const onDeRiskTargetMultipleTextFieldChange = (event: ChangeEvent<HTMLInputElement>) =>
     setDeRiskTargetMultiple(Number(event.target.value));
+
+  const onDeRiskTargetSizeTextFieldChange = (event: ChangeEvent<HTMLInputElement>) =>
+    setDeRiskTargetPositionPercentage(Number(event.target.value));
 
   return (
     <Card>
@@ -102,6 +109,15 @@ export const EntryForm: VFC<TradeEntryFormProps> = ({
               onChange={onDeRiskTargetMultipleTextFieldChange}
             />
           </FormControl>
+          <FormControl>
+            <TextField
+              variant='standard'
+              label='De risk target position size percentage'
+              type='number'
+              value={formatNumber(deRiskTargetPositionPercentage, true)}
+              onChange={onDeRiskTargetSizeTextFieldChange}
+            />
+          </FormControl>
         </Stack>
       </CardContent>
     </Card>
@@ -119,6 +135,8 @@ type NewTradeEntryContentProps = {
   setRiskInDollars: (risk: number) => void;
   deRiskTargetMultiple: number;
   setDeRiskTargetMultiple: (multiple: number) => void;
+  deRiskTargetPositionPercentage: number;
+  setDeRiskTargetPositionPercentage: (size: number) => void;
   onClick?: (time: string, price: number, series: ISeriesApi<'Candlestick'>) => void;
 };
 
@@ -133,6 +151,8 @@ export const NewTradeEntryContent: VFC<NewTradeEntryContentProps> = ({
   setRiskInDollars,
   deRiskTargetMultiple,
   setDeRiskTargetMultiple,
+  deRiskTargetPositionPercentage,
+  setDeRiskTargetPositionPercentage,
   onClick,
 }) => {
   const client = useContext(ClientContext);
@@ -168,6 +188,8 @@ export const NewTradeEntryContent: VFC<NewTradeEntryContentProps> = ({
           setRiskInDollars={setRiskInDollars}
           deRiskTargetMultiple={deRiskTargetMultiple}
           setDeRiskTargetMultiple={setDeRiskTargetMultiple}
+          deRiskTargetPositionPercentage={deRiskTargetPositionPercentage}
+          setDeRiskTargetPositionPercentage={setDeRiskTargetPositionPercentage}
         />
       </Box>
     </Box>
@@ -193,6 +215,7 @@ export const NewTradeModal: VFC<NewTradeModalProps> = ({ onConfirm, onCancel }) 
   const [stopPrice, setStopPrice] = useState<number>(0);
   const [riskInDollars, setRiskInDollars] = useState<number>(100);
   const [deRiskTargetMultiple, setDeRiskTargetMultiple] = useState<number>(1);
+  const [deRiskTargetPositionPercentage, setDeRiskTargetPositionPercentage] = useState<number>(50);
   const isEntryClickRef = useRef<boolean>(true);
   const priceSeriesRef = useRef<ISeriesApi<'Candlestick'>>();
   const priceLines = useRef<PriceLines>({});
@@ -294,6 +317,7 @@ export const NewTradeModal: VFC<NewTradeModalProps> = ({ onConfirm, onCancel }) 
       entryPrice,
       stopPrice,
       deRiskTargetMultiple,
+      deRiskTargetPositionPercentage,
       riskInDollars,
     });
   };
@@ -314,6 +338,8 @@ export const NewTradeModal: VFC<NewTradeModalProps> = ({ onConfirm, onCancel }) 
           riskInDollars={riskInDollars}
           setRiskInDollars={setRiskInDollars}
           onClick={onClick}
+          deRiskTargetPositionPercentage={deRiskTargetPositionPercentage}
+          setDeRiskTargetPositionPercentage={setDeRiskTargetPositionPercentage}
         />
       </DialogContent>
       <DialogActions sx={{ display: 'flex' }}>

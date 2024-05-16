@@ -41,6 +41,7 @@ export interface IRawTradeEntry {
   entryPrice: number;
   stopPrice: number;
   deRiskTargetMultiple: number;
+  deRiskTargetPositionPercentage: number;
   riskInDollars: number;
 }
 
