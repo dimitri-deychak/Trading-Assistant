@@ -22,25 +22,27 @@ export const tradeStream =
     source: 'sip',
   });
 
-if (tradeStream) {
-  tradeStream.once('authenticated', async () => {
-    console.log('Trade stream authenticated');
-    enqueue(async () => updateTradePriceSubscriptionsToAccountPositions());
-  });
-
-  tradeStream.on('trade', async (trade: Trade) => {
-    enqueue(async () => {
-      await handleNewTrade(trade);
+export const initiateTradeStream = () => {
+  if (tradeStream) {
+    tradeStream.once('authenticated', async () => {
+      console.log('Trade stream authenticated');
+      enqueue(async () => updateTradePriceSubscriptionsToAccountPositions());
     });
-  });
 
-  tradeStream.on('subscription', (message) => {
-    const { T } = message;
-    if (T === 'subscription') {
-      console.log(message);
-    }
-  });
-}
+    tradeStream.on('trade', async (trade: Trade) => {
+      enqueue(async () => {
+        await handleNewTrade(trade);
+      });
+    });
+
+    tradeStream.on('subscription', (message) => {
+      const { T } = message;
+      if (T === 'subscription') {
+        console.log(message);
+      }
+    });
+  }
+};
 
 // const testSymbols = ['SPY', 'QQQ', 'AMZN', 'NFLX', 'AAPL'];
 

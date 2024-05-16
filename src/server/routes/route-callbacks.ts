@@ -8,7 +8,6 @@ import {
   IPosition,
   IRawTradeEntry,
   ListenerExitSide,
-  ListenerQuantityType,
   ListenerTimeRule,
   ListenerTriggerType,
   PositionStatus,
@@ -148,9 +147,9 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
 
   const rMultipleTargetPrice = entryPrice + deRiskTargetMultiple * distanceFromEntryToStop;
 
-  const oneThirdDistanceFromEntryTo1R = ONE_FIFTH * distanceFromEntryToStop;
+  const oneFifthDistanceFromEntryTo1R = ONE_FIFTH * distanceFromEntryToStop;
 
-  const limitPrice = entryPrice + oneThirdDistanceFromEntryTo1R;
+  const limitPrice = entryPrice + oneFifthDistanceFromEntryTo1R;
 
   const notionalValue = Math.floor(riskInDollars / (entryPrice - stopPrice)) * entryPrice;
 
