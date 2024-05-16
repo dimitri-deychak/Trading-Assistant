@@ -6152,10 +6152,15 @@ multicast-dns@^6.0.1:
     dns-packet "^1.3.1"
     thunky "^1.0.2"
 
-nan@^2.12.1, nan@^2.13.2:
+nan@^2.12.1:
   version "2.15.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.15.0.tgz#3f34a473ff18e15c1b5626b62903b5ad6e665fee"
   integrity sha512-8ZtvEnA2c5aYCZYd1cvgdnU6cqwixRoYg70xPLWUws5ORTa/lnw+u4amixRS/Ac5U5mQVgp9pnlSUnbNWFaWZQ==
+
+nan@^2.17.0:
+  version "2.19.0"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.19.0.tgz#bb58122ad55a6c5bc973303908d5b16cfdd5a8c0"
+  integrity sha512-nO1xXxfh/RWNxfd/XPfbIfFk5vgLsAxUR9y5O0cHMJu/AW9U95JLXqthYHjEp+8gQ5p96K9jUp8nbVOxCdRbtw==
 
 nanoid@^3.3.1:
   version "3.3.2"
@@ -8076,12 +8081,12 @@ svgo@^2.7.0:
     picocolors "^1.0.0"
     stable "^0.1.8"
 
-talib@^1.1.4:
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/talib/-/talib-1.1.4.tgz#8ed1e93081609f4283cdb9f7bb70830131497672"
-  integrity sha512-b5Q7w4Hn5VG7mok2sf77MirBLJlEI0pYjvrhrdf7e9M4iK2/q8fElIr4bQnOlCIr5QVZhE3KsZuAPvx5Bc334Q==
+talib@^1.1.5:
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/talib/-/talib-1.1.5.tgz#b0922dbb3108cd74e6bd72f2b7b5ac9912a35d84"
+  integrity sha512-at8OQzwnAt5h/6d28/rL6xEO6d7/WzkKNd7NUtNVNewFGPwazAeglXo/sqTNLBZ0zUtZ8w4sXwpapKzH3eIX6A==
   dependencies:
-    nan "^2.13.2"
+    nan "^2.17.0"
 
 tapable@^2.0.0, tapable@^2.1.1, tapable@^2.2.0:
   version "2.2.1"

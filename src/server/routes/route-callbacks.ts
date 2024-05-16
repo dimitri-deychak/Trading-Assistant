@@ -16,7 +16,7 @@ import { ACCESS_PASSWORD, ALPACA_API_KEYS, IS_DEV_ALPACA } from '../config';
 import { db } from '../database';
 import { enqueue } from '../listener/queue';
 import { updateTradePriceSubscriptionsToAccountPositions } from '../listener/tradeListener/tradeListener';
-import { getTa } from '../ta/ta';
+import { getTa, getTradeBarsWithTa } from '../ta/ta';
 import { fetchBars, fetchBarsCSV } from '../listener/tradeListener/fetchPrices';
 import { stringify } from 'csv-stringify/sync';
 
@@ -128,9 +128,8 @@ export const getBarsHandler = async (req: Request, res: Response) => {
 export const getTaHandler = async (req: Request, res: Response) => {
   try {
     const symbol = String(req.query.symbol);
-    const type = String(req.query.type);
-    const length = Number(req.query.length);
-    const ta = await getTa(type, symbol, length);
+    console.log("symbol in api handler")
+    const ta = await getTradeBarsWithTa(symbol);
     res.send(ta);
   } catch (e) {
     console.error(e);
@@ -139,16 +138,18 @@ export const getTaHandler = async (req: Request, res: Response) => {
 };
 
 const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry): Promise<IPosition> => {
-  const { entryPrice, stopPrice, newSymbol, riskInDollars, deRiskTargetMultiple } = rawTradeEntry;
+  const { entryPrice, stopPrice, newSymbol, riskInDollars, deRiskTargetMultiple, deRiskTargetPositionPercentage } = rawTradeEntry;
 
   //ToDo: add this as option to FE
-  const ONE_THIRD = 1 / 3;
+  const ONE_FIFTH = 1 / 5;
 
   const distanceFromEntryToStop = Math.abs(entryPrice - stopPrice);
 
   const rMultipleTargetPrice = entryPrice + deRiskTargetMultiple * distanceFromEntryToStop;
 
-  const limitPrice = entryPrice * 1.005;
+  const oneFifthDistanceFromEntryTo1R = ONE_FIFTH * distanceFromEntryToStop;
+
+  const limitPrice = entryPrice + oneFifthDistanceFromEntryTo1R;
 
   const notionalValue = Math.floor(riskInDollars / (entryPrice - stopPrice)) * entryPrice;
 
@@ -172,7 +173,7 @@ const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry):
     breakEvenOnRest: true,
     closeOrder: {
       symbol: newSymbol,
-      percentage: ONE_THIRD * 100,
+      percentage: deRiskTargetPositionPercentage,
     } as ClosePosition,
   };
 

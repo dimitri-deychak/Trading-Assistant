@@ -3,19 +3,46 @@ import { IChartApi, ISeriesApi, LineStyle } from 'lightweight-charts';
 import { Ref } from 'react';
 import { CustomBar, IPosition, ListenerExitSide } from '../../../shared/interfaces';
 
-export const addFiftySma = (chart: IChartApi, bars: CustomBar[]) => {
-  const smaLine = chart.addLineSeries({
-    color: 'rgba(4, 111, 232, 1)',
-    lineWidth: 2,
+export const addMovingAverages = (chart: IChartApi, bars: CustomBar[]) => {
+  const sma50Line = chart.addLineSeries({
+    color: '#9c27b0',
+    lineWidth: 1,
+    crosshairMarkerVisible: false,
+    lastValueVisible: false,
+    priceLineVisible: false,
   });
-  const data = [];
+  const ema21Line = chart.addLineSeries({
+    color: '#00bcd4',
+    lineWidth: 1,
+    crosshairMarkerVisible: false,
+    lastValueVisible: false,
+    priceLineVisible: false,
+  });
+  const ema10Line = chart.addLineSeries({
+    color: 'black',
+    lineWidth: 1,
+    crosshairMarkerVisible: false,
+    lastValueVisible: false,
+    priceLineVisible: false,
+  });
+  const sma50Data = [];
+  const ema21Data = [];
+  const ema10Data = [];
   bars.forEach((bar: CustomBar) => {
-    if (bar.fiftySMA) {
-      data.push({ time: new Date(bar.t).toLocaleString(), value: bar.fiftySMA });
+    if (bar.sma50) {
+      sma50Data.push({ time: new Date(bar.t).toLocaleString(), value: bar.sma50 });
+    }
+    if (bar.ema21) {
+      ema21Data.push({ time: new Date(bar.t).toLocaleString(), value: bar.ema21 });
+    }
+    if (bar.ema10) {
+      ema10Data.push({ time: new Date(bar.t).toLocaleString(), value: bar.ema10 });
     }
   });
-  smaLine.setData(data);
-  return smaLine;
+  sma50Line.setData(sma50Data);
+  ema21Line.setData(ema21Data);
+  ema10Line.setData(ema10Data);
+  return { sma50Line, ema21Line, ema10Line };
 };
 export const addCandlestickBars = (chart: IChartApi, data: Bar[], position?: IPosition) => {
   const newSeriesOptions = {

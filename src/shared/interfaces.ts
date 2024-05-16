@@ -1,11 +1,13 @@
 import { Activity, ClosePosition, Order, PlaceOrder, TradeActivity, Bar } from '@master-chief/alpaca';
 
 export interface TAReturnValue {
-  tradeBars: CustomBar[];
   sma?: number[];
+  ema?: number[];
 }
 export interface CustomBar extends Bar {
-  fiftySMA?: number;
+  sma50?: number;
+  ema10?: number;
+  ema21?: number;
 }
 
 // 3 Tiers of positions
@@ -39,6 +41,7 @@ export interface IRawTradeEntry {
   entryPrice: number;
   stopPrice: number;
   deRiskTargetMultiple: number;
+  deRiskTargetPositionPercentage: number;
   riskInDollars: number;
 }
 

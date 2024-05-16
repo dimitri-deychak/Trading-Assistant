@@ -56,8 +56,10 @@ export const App = () => {
         }
       }
     };
-    authenticatePrompt();
-  }, []);
+    if (!authenticated) {
+      authenticatePrompt();
+    }
+  }, [authenticated]);
 
   const alpacaClient = useMemo(() => {
     if (env) {

@@ -6,7 +6,7 @@ import { staticsRouter } from './routes/statics-router';
 import * as config from './config';
 
 import { tradeStream } from './listener/tradeListener/tradeListener';
-import { clearAccountInterval, clearPriceInterval } from './listener/intervals';
+import { clearAccountInterval, clearClockInterval, clearPriceInterval } from './listener/intervals';
 
 console.log(`*******************************************`);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
@@ -34,6 +34,7 @@ async function exitHandler(evtOrExitCodeOrError: number | string | Error) {
     }
     clearAccountInterval();
     clearPriceInterval();
+    clearClockInterval();
     console.log('Closed connections');
   } catch (e) {
     console.error('EXIT HANDLER ERROR', e);

@@ -1,6 +1,6 @@
 import { AlpacaStream, Trade } from '@master-chief/alpaca';
 import { IPosition, PositionStatus } from '../../../shared/interfaces';
-import { ALPACA_API_KEYS, IS_DEV_ALPACA } from '../../config';
+import { ALPACA_API_KEYS, IS_DEV_ALPACA, USE_POLLING_INSTEAD_OF_STREAM } from '../../config';
 import { db } from '../../database';
 import { enqueue } from '../queue';
 import { latestPriceHandler } from './latestPriceHandlers';
@@ -9,21 +9,20 @@ import { setPriceInterval } from '../intervals';
 
 const { API_KEY_ID, SECRET_KEY } = ALPACA_API_KEYS;
 
-export let tradeStream;
+export const tradeStream =
+  !USE_POLLING_INSTEAD_OF_STREAM &&
+  !IS_DEV_ALPACA &&
+  new AlpacaStream({
+    credentials: {
+      key: API_KEY_ID,
+      secret: SECRET_KEY,
+      paper: IS_DEV_ALPACA,
+    },
+    type: 'market_data',
+    source: 'sip',
+  });
 
 export const initiateTradeStream = () => {
-  tradeStream =
-    !IS_DEV_ALPACA &&
-    new AlpacaStream({
-      credentials: {
-        key: API_KEY_ID,
-        secret: SECRET_KEY,
-        paper: IS_DEV_ALPACA,
-      },
-      type: 'market_data',
-      source: 'sip',
-    });
-
   if (tradeStream) {
     tradeStream.once('authenticated', async () => {
       console.log('Trade stream authenticated');
@@ -71,7 +70,6 @@ export const handleNewTrade = async (trade: Trade) => {
   try {
     const excludeTrade = findCommonElements(exclude_conditions, trade.c);
     if (excludeTrade) {
-      console.log('Excluding trade', trade.c.toString(), trade.p);
       return;
     }
 
