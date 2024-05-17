@@ -140,16 +140,12 @@ export const getTaHandler = async (req: Request, res: Response) => {
 const initiatePositionFromRawTradeEntry = async (rawTradeEntry: IRawTradeEntry): Promise<IPosition> => {
   const { entryPrice, stopPrice, newSymbol, riskInDollars, deRiskTargetMultiple, deRiskTargetPositionPercentage } = rawTradeEntry;
 
-  //ToDo: add this as option to FE
-  const ONE_FIFTH = 1 / 5;
-
   const distanceFromEntryToStop = Math.abs(entryPrice - stopPrice);
 
   const rMultipleTargetPrice = entryPrice + deRiskTargetMultiple * distanceFromEntryToStop;
 
-  const oneFifthDistanceFromEntryTo1R = ONE_FIFTH * distanceFromEntryToStop;
-
-  const limitPrice = entryPrice + oneFifthDistanceFromEntryTo1R;
+  // should be 0.5% above entryPrice
+  const limitPrice = entryPrice * 1.005;
 
   const notionalValue = Math.floor(riskInDollars / (entryPrice - stopPrice)) * entryPrice;
 
